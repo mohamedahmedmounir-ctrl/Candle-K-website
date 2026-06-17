@@ -1,0 +1,137 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Edit' if product else 'Add' }} Product — Admin{% endblock %}
+{% block page_title %}{{ 'Edit Product' if product else 'New Product' }}{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_products') }}" class="admin-btn admin-btn-secondary">← Back to Products</a>
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+  <div style="display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start;">
+
+    <!-- Left Column -->
+    <div>
+      <!-- Basic Info -->
+      <div class="admin-card" style="margin-bottom:24px;">
+        <div class="admin-card__header"><div class="admin-card__title">Product Details</div></div>
+        <div class="admin-card__body">
+          <div class="admin-form-group">
+            <label>Product Name *</label>
+            <input type="text" name="name" class="admin-input" value="{{ product.name if product else '' }}" required placeholder="e.g. Velvet Rose">
+          </div>
+          <div class="admin-form-group">
+            <label>Short Description</label>
+            <input type="text" name="short_description" class="admin-input" value="{{ product.short_description if product else '' }}" placeholder="One-line description shown on product cards">
+          </div>
+          <div class="admin-form-group">
+            <label>Full Description</label>
+            <textarea name="description" class="admin-textarea" style="min-height:160px;" placeholder="Detailed product description...">{{ product.description if product else '' }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="admin-card">
+        <div class="admin-card__header"><div class="admin-card__title">Product Images</div></div>
+        <div class="admin-card__body">
+
+          {% if product and images %}
+          <div style="margin-bottom:24px;">
+            <div style="font-size:0.73rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px;">Current Images</div>
+            <div class="image-previews">
+              {% for img in images %}
+              <div class="image-preview">
+                <img src="{{ url_for('uploaded_product', filename=img.filename) }}" alt="">
+                {% if img.is_primary %}<span class="image-preview__badge">Primary</span>{% endif %}
+                <div class="image-preview__actions">
+                  <button type="button" class="admin-btn admin-btn-primary admin-btn-sm set-primary-btn" data-image-id="{{ img.id }}">Set Primary</button>
+                  <button type="button" class="admin-btn admin-btn-danger admin-btn-sm delete-image-btn" data-image-id="{{ img.id }}">Delete</button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="image-upload-zone">
+            <input type="file" id="image-upload-input" name="images" multiple accept="image/*">
+            <div class="image-upload-zone__icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div class="image-upload-zone__text">
+              <strong>Click to upload</strong> or drag & drop<br>
+              PNG, JPG, WEBP up to 16MB. First image becomes primary.
+            </div>
+          </div>
+          <div class="image-previews" id="image-previews"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+      <!-- Pricing -->
+      <div class="admin-card" style="margin-bottom:24px;">
+        <div class="admin-card__header"><div class="admin-card__title">Pricing & Stock</div></div>
+        <div class="admin-card__body">
+          <div class="admin-form-group">
+            <label>Price (EGP) *</label>
+            <input type="number" name="price" class="admin-input" value="{{ product.price if product else '' }}" required step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="admin-form-group">
+            <label>Original Price (for sale display)</label>
+            <input type="number" name="original_price" class="admin-input" value="{{ product.original_price if product and product.original_price else '' }}" step="0.01" min="0" placeholder="Leave empty if no sale">
+          </div>
+          <div class="admin-form-group">
+            <label>Stock Quantity</label>
+            <input type="number" name="stock" class="admin-input" value="{{ product.stock if product else 0 }}" min="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Organisation -->
+      <div class="admin-card" style="margin-bottom:24px;">
+        <div class="admin-card__header"><div class="admin-card__title">Organisation</div></div>
+        <div class="admin-card__body">
+          <div class="admin-form-group">
+            <label>Category</label>
+            <select name="category_id" class="admin-select">
+              <option value="">— No Category —</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="admin-form-group">
+            <div class="admin-checkbox">
+              <input type="checkbox" id="is_active" name="is_active" {% if not product or product.is_active %}checked{% endif %}>
+              <label for="is_active">Active (visible on website)</label>
+            </div>
+          </div>
+          <div class="admin-form-group">
+            <div class="admin-checkbox">
+              <input type="checkbox" id="is_featured" name="is_featured" {% if product and product.is_featured %}checked{% endif %}>
+              <label for="is_featured">Featured (shown on homepage)</label>
+            </div>
+          </div>
+          <div class="admin-form-group">
+            <div class="admin-checkbox">
+              <input type="checkbox" id="is_bestseller" name="is_bestseller" {% if product and product.is_bestseller %}checked{% endif %}>
+              <label for="is_bestseller">Bestseller badge</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; justify-content:center; padding:14px;">
+          {{ 'Update Product' if product else 'Create Product' }}
+        </button>
+        <a href="{{ url_for('admin_products') }}" class="admin-btn admin-btn-secondary" style="width:100%; justify-content:center;">Cancel</a>
+      </div>
+    </div>
+
+  </div>
+</form>
+{% endblock %}

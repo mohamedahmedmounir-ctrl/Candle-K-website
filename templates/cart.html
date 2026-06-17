@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Shopping Cart — Candle K{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{{ url_for('index') }}">Home</a><span>/</span><span>Cart</span>
+    </div>
+    <h1 class="page-header__title">Your Cart</h1>
+  </div>
+</div>
+
+<section style="padding-bottom:100px;">
+  <div class="container">
+    {% if items %}
+    <div style="display:grid; grid-template-columns:1fr 360px; gap:64px; align-items:start;">
+
+      <!-- Cart Items -->
+      <div>
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>
+                <div class="cart-item__info">
+                  {% if item.image %}
+                  <img class="cart-item__image" src="{{ url_for('uploaded_product', filename=item.image) }}" alt="{{ item.name }}">
+                  {% else %}
+                  <div class="cart-item__placeholder">
+                    <svg width="32" height="40" viewBox="0 0 120 160" fill="none"><rect x="40" y="60" width="40" height="90" rx="2" fill="#B8935A" opacity="0.4"/><path d="M60 60 C55 45 45 40 50 28 C52 35 58 32 60 20 C62 32 68 35 70 28 C75 40 65 45 60 60Z" fill="#B8935A" opacity="0.5"/></svg>
+                  </div>
+                  {% endif %}
+                  <div>
+                    <div class="cart-item__name">{{ item.name }}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text); font-family:var(--font-serif);">{{ item.price | int }} EGP</td>
+              <td>
+                <form class="cart-qty-form" action="/cart/update" method="POST">
+                  <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                  <div class="qty-input">
+                    <button type="button" class="qty-minus">−</button>
+                    <input type="number" name="qty" value="{{ item.qty }}" min="1" style="width:48px;">
+                    <button type="button" class="qty-plus">+</button>
+                  </div>
+                </form>
+              </td>
+              <td style="font-family:var(--font-serif); color:var(--dark);">{{ (item.price * item.qty) | int }} EGP</td>
+              <td>
+                <form action="/cart/remove" method="POST">
+                  <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                  <button type="submit" class="nav__icon" style="color:var(--text-light);" title="Remove">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:32px; padding-top:24px; border-top:1px solid var(--border);">
+          <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm">← Continue Shopping</a>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="cart-summary">
+        <div style="font-family:var(--font-serif); font-size:1.4rem; color:var(--dark); margin-bottom:24px; font-style:italic;">Order Summary</div>
+
+        <div class="cart-summary__row">
+          <span style="color:var(--text-light);">Subtotal</span>
+          <span>{{ subtotal | int }} EGP</span>
+        </div>
+        <div class="cart-summary__row">
+          <span style="color:var(--text-light);">Shipping</span>
+          <span>{% if shipping == 0 %}Free{% else %}{{ shipping | int }} EGP{% endif %}</span>
+        </div>
+        {% if subtotal < threshold %}
+        <div style="font-size:0.8rem; color:var(--gold); padding:12px 0; border-bottom:1px solid var(--border);">
+          Add {{ (threshold - subtotal) | int }} EGP more for free shipping
+        </div>
+        {% else %}
+        <div style="font-size:0.8rem; color:green; padding:12px 0; border-bottom:1px solid var(--border);">
+          ✓ You qualify for free shipping!
+        </div>
+        {% endif %}
+        <div class="cart-summary__total">
+          <span>Total</span>
+          <span>{{ total | int }} EGP</span>
+        </div>
+        <div style="margin-top:24px;">
+          <a href="{{ url_for('checkout') }}" class="btn btn-primary" style="width:100%;">Proceed to Checkout</a>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <div style="text-align:center; padding:80px 0;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin:0 auto 24px; color:var(--border);"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <h2 style="font-family:var(--font-serif); font-size:2rem; font-style:italic; margin-bottom:12px; color:var(--dark);">Your cart is empty</h2>
+      <p style="color:var(--text-light); margin-bottom:32px;">Discover our collection of handcrafted candles.</p>
+      <a href="{{ url_for('shop') }}" class="btn btn-primary">Shop Now</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+.welcome-bar{background:linear-gradient(135deg,var(--dark) 0%,#3D3A35 100%);border-radius:10px;padding:22px 28px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.welcome-text{font-family:var(--font-serif);font-size:1.3rem;color:var(--ivory);}
+.welcome-sub{font-size:.8rem;color:rgba(247,245,236,.45);margin-top:3px;}
+.alert-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;}
+.alert-chip{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;text-decoration:none;font-size:.82rem;font-weight:600;border:1px solid transparent;transition:opacity .2s;}
+.alert-chip:hover{opacity:.85;}
+.alert-orange{background:#FEF3CD;border-color:#FDE68A;color:#92400E;}
+.alert-red{background:#FEE2E2;border-color:#FECACA;color:#991B1B;}
+.alert-purple{background:#EDE9FE;border-color:#DDD6FE;color:#5B21B6;}
+.alert-green{background:#D1FAE5;border-color:#A7F3D0;color:#065F46;}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.quick-link{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 10px;background:var(--surface-2);border-radius:8px;text-decoration:none;border:1px solid var(--border);transition:all .2s;text-align:center;}
+.quick-link:hover{background:rgba(201,120,120,.08);border-color:var(--pink);}
+.quick-link .qi{font-size:1.5rem;}
+.quick-link .ql{font-size:.76rem;color:var(--text-dim);letter-spacing:.03em;}
+.section-title{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+</style>
+
+<!-- Welcome -->
+<div class="welcome-bar">
+  <div>
+    <div class="welcome-text">
+      {% set h = now.hour %}Good {% if h < 12 %}morning{% elif h < 17 %}afternoon{% else %}evening{% endif %} 👋
+    </div>
+    <div class="welcome-sub">{{ now.strftime('%A, %B %d %Y') }}</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="{{ url_for('admin_orders') }}?status=pending_verification" class="admin-btn admin-btn-sm" style="background:var(--pink);color:#fff;border:none;">🔍 Verify Payments</a>
+    <a href="{{ url_for('shop') }}" target="_blank" class="admin-btn admin-btn-secondary admin-btn-sm">View Store →</a>
+  </div>
+</div>
+
+<!-- Urgent Alerts -->
+{% if pending_orders > 0 or out_of_stock > 0 or pending_reviews > 0 or pending_custom > 0 %}
+<div style="background:#fff;border:1px solid var(--border);border-left:4px solid var(--pink);border-radius:8px;padding:14px 18px;margin-bottom:24px;">
+  <div style="font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pink);font-weight:700;margin-bottom:10px;">⚡ Needs Attention</div>
+  <div class="alert-row" style="margin:0;">
+    {% if pending_orders > 0 %}
+    <a href="{{ url_for('admin_orders') }}?status=pending_verification" class="alert-chip alert-orange">
+      🔍 {{ pending_orders }} order{{ 's' if pending_orders != 1 }} pending payment verification
+    </a>
+    {% endif %}
+    {% if out_of_stock > 0 %}
+    <a href="{{ url_for('admin_inventory') }}" class="alert-chip alert-red">
+      🚫 {{ out_of_stock }} product{{ 's' if out_of_stock != 1 }} out of stock
+    </a>
+    {% endif %}
+    {% if pending_reviews > 0 %}
+    <a href="{{ url_for('admin_reviews') }}" class="alert-chip alert-purple">
+      ⭐ {{ pending_reviews }} review{{ 's' if pending_reviews != 1 }} waiting for approval
+    </a>
+    {% endif %}
+    {% if pending_custom > 0 %}
+    <a href="{{ url_for('admin_custom_orders') }}" class="alert-chip alert-green">
+      ✏️ {{ pending_custom }} custom order{{ 's' if pending_custom != 1 }} need a quote
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg></div>
+    <div class="stat-card__value">{{ total_orders }}</div>
+    <div class="stat-card__label">Total Orders</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+    <div class="stat-card__value">{{ "{:,}".format(total_revenue|int) }} EGP</div>
+    <div class="stat-card__label">Total Revenue</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <div class="stat-card__value" {% if pending_orders > 0 %}style="color:#f0a500;"{% endif %}>{{ pending_orders }}</div>
+    <div class="stat-card__label">Pending</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/></svg></div>
+    <div class="stat-card__value">{{ total_products }}</div>
+    <div class="stat-card__label">Products</div>
+  </div>
+</div>
+
+<!-- Main grid -->
+<div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
+
+  <!-- Recent Orders table -->
+  <div class="admin-card">
+    <div class="admin-card__header">
+      <div class="admin-card__title">📋 Recent Orders</div>
+      <div style="display:flex;gap:8px;">
+        <a href="{{ url_for('admin_orders_export') }}" class="admin-btn admin-btn-secondary admin-btn-sm">↓ CSV</a>
+        <a href="{{ url_for('admin_orders') }}" class="admin-btn admin-btn-secondary admin-btn-sm">All Orders →</a>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Order #</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in recent_orders %}
+        <tr>
+          <td style="font-family:var(--font-serif);color:var(--gold-light);font-size:.83rem;">{{ o.order_number }}</td>
+          <td>
+            <div style="color:var(--cream);font-size:.87rem;">{{ o.customer_name }}</div>
+            <div style="font-size:.74rem;color:var(--text-dim);">{{ o.customer_phone }}</div>
+          </td>
+          <td style="color:var(--cream);font-weight:600;">{{ o.total|int }} EGP</td>
+          <td>
+            {% if o.payment_method=='cod' %}
+            <span style="font-size:.75rem;padding:2px 8px;background:rgba(143,168,130,.15);color:#8FA882;border-radius:10px;">COD</span>
+            {% else %}
+            <span style="font-size:.75rem;padding:2px 8px;background:rgba(201,120,120,.15);color:#C97878;border-radius:10px;">Instapay</span>
+            {% endif %}
+          </td>
+          <td><span class="status status-{{ o.status }}">{{ o.status.replace('_',' ') }}</span></td>
+          <td style="color:var(--text-dim);font-size:.76rem;">{{ o.created_at[:10] }}</td>
+          <td><a href="{{ url_for('admin_order_detail', oid=o.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">View</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:28px;">No orders yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Right sidebar -->
+  <div style="display:flex;flex-direction:column;gap:18px;">
+
+    <!-- Quick Actions -->
+    <div class="admin-card">
+      <div class="admin-card__header"><div class="admin-card__title">⚡ Quick Actions</div></div>
+      <div class="admin-card__body">
+        <div class="quick-grid">
+          {% for icon, label, target in [
+            ('➕','Add Product','admin_product_add'),
+            ('📋','All Orders','admin_orders'),
+            ('🏷️','Promos','admin_promos'),
+            ('📦','Inventory','admin_inventory'),
+            ('⭐','Reviews','admin_reviews'),
+            ('✏️','Custom Orders','admin_custom_orders'),
+          ] %}
+          <a href="{{ url_for(target) }}" class="quick-link">
+            <span class="qi">{{ icon }}</span>
+            <span class="ql">{{ label }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Top products -->
+    <div class="admin-card">
+      <div class="admin-card__header"><div class="admin-card__title">🏆 Top Products</div></div>
+      <div class="admin-card__body">
+        {% if bestsellers %}
+        {% for p in bestsellers %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:.84rem;color:var(--text);">{{ p.name }}</span>
+          <span style="font-size:.78rem;color:var(--gold-light);background:rgba(200,164,90,.1);padding:2px 10px;border-radius:10px;">{{ p.total_sold }} sold</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color:var(--text-dim);font-size:.84rem;text-align:center;padding:16px 0;">No sales data yet</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Low stock -->
+    {% if low_stock %}
+    <div class="admin-card">
+      <div class="admin-card__header" style="background:rgba(240,165,0,.06);">
+        <div class="admin-card__title" style="color:#C8A45A;">⚠️ Low Stock</div>
+        <a href="{{ url_for('admin_inventory') }}" style="font-size:.76rem;color:var(--pink);">Update →</a>
+      </div>
+      <div class="admin-card__body">
+        {% for p in low_stock %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:.83rem;">
+          <span style="color:var(--text);">{{ p.name }}</span>
+          <span style="background:#FEF3CD;color:#92400E;padding:2px 9px;border-radius:10px;font-size:.74rem;font-weight:700;">{{ p.stock }} left</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

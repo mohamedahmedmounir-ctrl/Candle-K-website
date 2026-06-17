@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+{% block title %}Design Your Custom Candle — {{ site.get('store_name','Candle K') }}{% endblock %}
+
+{% block content %}
+<style>
+.cw{max-width:1060px;margin:0 auto;padding:40px 24px 80px;}
+.c-hero{text-align:center;margin-bottom:44px;}
+.c-hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,5vw,3rem);color:var(--charcoal);margin-bottom:12px;}
+.c-hero p{font-size:.95rem;color:var(--charcoal-lt);max-width:520px;margin:0 auto;line-height:1.8;}
+.c-layout{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start;}
+@media(max-width:860px){.c-layout{grid-template-columns:1fr;}}
+.c-card{background:#fff;border:1px solid var(--line-lt);border-radius:10px;padding:26px;margin-bottom:18px;}
+.c-card h2{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--charcoal);margin:0 0 4px;display:flex;align-items:center;gap:10px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--pink-deep);color:#fff;font-size:.75rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-sub{font-size:.82rem;color:var(--charcoal-lt);margin:4px 0 16px 36px;}
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
+.copt{padding:13px 8px;border:2px solid var(--line-lt);border-radius:8px;text-align:center;cursor:pointer;transition:all .2s;background:var(--ivory);user-select:none;}
+.copt:hover{border-color:var(--pink);}
+.copt.on{border-color:var(--pink-deep);background:#FDF7F7;}
+.copt .oi{font-size:1.5rem;margin-bottom:4px;}
+.copt .ol{font-size:.78rem;font-weight:600;color:var(--charcoal);}
+.copt .op{font-size:.7rem;color:var(--pink-deep);font-weight:700;margin-top:2px;}
+.copt .os{font-size:.68rem;color:var(--charcoal-lt);}
+.scents{display:flex;flex-wrap:wrap;gap:8px;}
+.sc{padding:7px 14px;border:2px solid var(--line-lt);border-radius:20px;font-size:.8rem;cursor:pointer;transition:all .2s;background:var(--ivory);}
+.sc:hover{border-color:var(--pink);}
+.sc.on{border-color:var(--pink-deep);background:#FDF7F7;font-weight:600;}
+.sc .sp{font-size:.7rem;color:var(--pink-deep);font-weight:700;margin-left:4px;}
+.intens{display:flex;gap:10px;}
+.intens .copt{flex:1;padding:10px;}
+.colors{display:flex;flex-wrap:wrap;gap:10px;}
+.col-dot{width:36px;height:36px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;}
+.col-dot.on{border-color:var(--charcoal);transform:scale(1.15);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:6px;}
+.field input,.field textarea,.field select{width:100%;padding:11px 14px;border:1px solid var(--line-lt);border-radius:6px;font-size:.9rem;color:var(--charcoal);background:var(--ivory);font-family:inherit;box-sizing:border-box;}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--pink-deep);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:560px){.form-row{grid-template-columns:1fr;}}
+/* Payment */
+.pay-opts{display:flex;flex-direction:column;gap:10px;}
+.pay-opt{display:flex;align-items:flex-start;gap:14px;padding:15px 16px;border:2px solid var(--line-lt);border-radius:8px;cursor:pointer;transition:all .2s;}
+.pay-opt input[type=radio]{accent-color:var(--pink-deep);width:17px;height:17px;flex-shrink:0;margin-top:3px;}
+.pay-opt.on{border-color:var(--pink-deep);background:#FDF7F7;}
+.pay-opt-info strong{display:block;font-size:.9rem;color:var(--charcoal);margin-bottom:2px;}
+.pay-opt-info small{font-size:.78rem;color:var(--charcoal-lt);}
+#co-instapay{display:none;margin-top:14px;padding:18px;background:#FDF5ED;border:1px dashed #E2B587;border-radius:8px;}
+#co-instapay.show{display:block;}
+.ip-num{font-family:'Cormorant Garamond',serif;font-size:1.8rem;text-align:center;color:var(--charcoal);margin:8px 0 2px;}
+.ip-name{text-align:center;font-size:.8rem;color:var(--charcoal-lt);margin-bottom:14px;}
+#co-upload{border:2px dashed var(--line-lt);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .25s;background:#fff;margin-top:10px;}
+#co-upload:hover,#co-upload.drag{border-color:var(--pink-deep);background:#FDF7F7;}
+#co-upload .uz-icon{font-size:1.8rem;margin-bottom:6px;}
+#co-upload .uz-text strong{color:var(--pink-deep);font-size:.88rem;}
+#co-upload .uz-text small{display:block;color:var(--charcoal-lt);font-size:.74rem;margin-top:3px;}
+#co-file-input{display:none;}
+/* Price box */
+.price-box{background:#fff;border:1px solid var(--line-lt);border-radius:10px;padding:22px;position:sticky;top:90px;}
+.price-box h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--charcoal);margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--line-lt);}
+.pr-row{display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:7px;}
+.pr-row .pl{color:var(--charcoal-lt);}
+.pr-row .pv{color:var(--charcoal);font-weight:500;}
+.pr-div{height:1px;background:var(--line-lt);margin:10px 0;}
+.pr-total{display:flex;justify-content:space-between;align-items:baseline;}
+.pr-total .tl{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--charcoal);}
+.pr-total .tv{font-family:'Cormorant Garamond',serif;font-size:1.7rem;color:var(--charcoal);}
+.pr-placeholder{text-align:center;padding:20px;color:var(--charcoal-lt);font-size:.83rem;line-height:1.6;}
+.pr-note{font-size:.74rem;color:var(--charcoal-lt);line-height:1.6;margin-top:12px;padding:10px;background:var(--ivory);border-radius:6px;}
+.submit-btn{width:100%;padding:15px;background:var(--charcoal);color:var(--ivory);border:none;border-radius:6px;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;margin-top:14px;transition:background .2s;}
+.submit-btn:hover:not(:disabled){background:var(--pink-deep);}
+.submit-btn:disabled{background:var(--charcoal-lt);cursor:not-allowed;}
+.alert-ok{padding:14px 18px;border-radius:8px;margin-bottom:20px;background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.alert-err{padding:14px 18px;border-radius:8px;margin-bottom:20px;background:#f8d7da;color:#721c24;}
+</style>
+
+<div class="cw">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="alert-{{ 'ok' if cat=='success' else 'err' }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="c-hero">
+    <div style="font-size:2.6rem;margin-bottom:14px;">🕯️✨</div>
+    <h1>Design Your Custom Candle</h1>
+    <p>Every candle is handcrafted to your exact specifications. Choose your options and see the price update live.</p>
+  </div>
+
+  <form method="POST" id="cform" enctype="multipart/form-data">
+    <input type="hidden" name="candle_shape"     id="f_shape">
+    <input type="hidden" name="candle_size"      id="f_size">
+    <input type="hidden" name="scent"            id="f_scent">
+    <input type="hidden" name="scent_intensity"  id="f_intensity" value="medium">
+    <input type="hidden" name="color"            id="f_color">
+    <input type="hidden" name="calculated_price" id="f_calc_price" value="0">
+
+    <div class="c-layout">
+      <div>
+
+        <!-- 1: Shape -->
+        <div class="c-card">
+          <h2><span class="step-num">1</span> Choose Your Shape</h2>
+          <p class="step-sub">What shape would you like?</p>
+          <div class="opt-grid">
+            {% for s in shapes %}
+            <div class="copt" data-type="shape" data-name="{{ s.name }}" onclick="pick('shape','{{ s.name }}',this)">
+              <div class="oi">{{ s.icon or '🕯️' }}</div>
+              <div class="ol">{{ s.name }}</div>
+              <div class="op">{% if s.price_extra > 0 %}{{ s.price_extra|int }} EGP{% else %}Base{% endif %}</div>
+              {% if s.description %}<div class="os">{{ s.description }}</div>{% endif %}
+            </div>
+            {% else %}
+            <p style="color:var(--charcoal-lt);font-size:.85rem;grid-column:1/-1;">No shapes set up yet. Admin can add them in Customize Options.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- 2: Size -->
+        <div class="c-card">
+          <h2><span class="step-num">2</span> Choose Your Size</h2>
+          <p class="step-sub">Larger sizes burn longer</p>
+          <div class="opt-grid">
+            {% for s in sizes %}
+            <div class="copt" data-type="size" data-name="{{ s.name }}" onclick="pick('size','{{ s.name }}',this)">
+              <div class="oi">{{ s.icon or '📏' }}</div>
+              <div class="ol">{{ s.name }}</div>
+              <div class="op">{% if s.price_extra > 0 %}+{{ s.price_extra|int }} EGP{% else %}Included{% endif %}</div>
+              {% if s.description %}<div class="os">{{ s.description }}</div>{% endif %}
+            </div>
+            {% else %}
+            <p style="color:var(--charcoal-lt);font-size:.85rem;grid-column:1/-1;">No sizes set up yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- 3: Scent -->
+        <div class="c-card">
+          <h2><span class="step-num">3</span> Choose Your Scent</h2>
+          <p class="step-sub">Select a fragrance — custom blends available</p>
+          <div class="scents">
+            {% for s in scents %}
+            <div class="sc" data-name="{{ s.name }}" onclick="pickScent('{{ s.name }}',this)">
+              {% if s.icon %}{{ s.icon }} {% endif %}{{ s.name }}
+              {% if s.price_extra > 0 %}<span class="sp">+{{ s.price_extra|int }} EGP</span>{% endif %}
+            </div>
+            {% else %}
+            <p style="color:var(--charcoal-lt);font-size:.85rem;">No scents set up yet.</p>
+            {% endfor %}
+          </div>
+          <div id="scent-custom-box" style="display:none;margin-top:14px;">
+            <div class="field">
+              <label>Describe your custom scent blend</label>
+              <input type="text" id="scent-custom-in" placeholder="e.g. Warm vanilla with a hint of cardamom and cinnamon">
+            </div>
+          </div>
+          <div style="margin-top:18px;">
+            <label style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);display:block;margin-bottom:8px;">Scent Intensity</label>
+            <div class="intens">
+              {% for lv, lb in [('light','🌸 Light'),('medium','🌺 Medium'),('strong','🌹 Strong')] %}
+              <div class="copt {% if lv=='medium' %}on{% endif %}" onclick="pickIntensity('{{ lv }}',this)">
+                <div style="font-size:.86rem;">{{ lb }}</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- 4: Color -->
+        <div class="c-card">
+          <h2><span class="step-num">4</span> Choose Your Color</h2>
+          <p class="step-sub">Pick from palette or describe your own</p>
+          <div class="colors">
+            {% for hex, name in [
+              ('#F7F5EC','Ivory'),('#2C2A27','Charcoal'),('#E8A0A0','Rose Pink'),
+              ('#C97878','Deep Rose'),('#8FA882','Sage Green'),('#8FA8C8','Dusty Blue'),
+              ('#C8A45A','Gold'),('#C8A0B4','Mauve'),('#FFFFFF','Pure White'),
+              ('#B8935A','Caramel'),('#D4B8A0','Peach'),('#9B8EA0','Lavender'),
+            ] %}
+            <div class="col-dot" style="background:{{ hex }};box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);"
+                 onclick="pickColor('{{ name }}',this)" title="{{ name }}"></div>
+            {% endfor %}
+          </div>
+          <div class="field" style="margin-top:14px;">
+            <label>Or describe a custom color</label>
+            <input type="text" id="color-custom" placeholder="e.g. Terracotta, Emerald green…"
+                   oninput="document.getElementById('f_color').value=this.value">
+          </div>
+        </div>
+
+        <!-- 5: Personal -->
+        <div class="c-card">
+          <h2><span class="step-num">5</span> Personal Touches</h2>
+          <div class="field">
+            <label>Message to engrave on candle (optional +{{ content.get('custom_price_message_surcharge','30')|int }} EGP)</label>
+            <input type="text" name="message_on_candle" id="msg-field" maxlength="60"
+                   placeholder="Happy Birthday Sara · With love from Ahmed…" oninput="calcPrice()">
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Quantity</label>
+              <select name="quantity" id="qty-field" onchange="calcPrice()">
+                {% for i in range(1,21) %}<option value="{{ i }}">{{ i }} candle{{ 's' if i>1 else '' }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="field">
+              <label>Occasion (optional)</label>
+              <select name="budget">
+                <option value="">General / Gift</option>
+                <option>Birthday</option><option>Wedding</option>
+                <option>Anniversary</option><option>Home Décor</option>
+                <option>Corporate Gift</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Additional notes</label>
+            <textarea name="notes" rows="3" placeholder="Packaging preferences, deadline, special requests…"></textarea>
+          </div>
+        </div>
+
+        <!-- 6: Your details -->
+        <div class="c-card">
+          <h2><span class="step-num">6</span> Your Details</h2>
+          <div class="form-row">
+            <div class="field"><label>Full Name *</label><input type="text" name="name" required placeholder="Sara Ahmed"></div>
+            <div class="field"><label>Phone *</label><input type="tel" name="phone" required placeholder="+20 100 000 0000"></div>
+          </div>
+          <div class="field"><label>Email (for order updates) *</label><input type="email" name="email" required placeholder="sara@example.com"></div>
+          <div class="field"><label>Delivery Address *</label><input type="text" name="address" required placeholder="15 El Nasr Street, Apt 4B"></div>
+          <div class="field"><label>City *</label><input type="text" name="city" required placeholder="Cairo"></div>
+        </div>
+
+        <!-- 7: Payment -->
+        <div class="c-card">
+          <h2><span class="step-num">7</span> Payment</h2>
+          <p class="step-sub">Choose how you would like to pay</p>
+          <div class="pay-opts">
+            <label class="pay-opt on" id="pay-cod">
+              <input type="radio" name="payment_method" value="cod" checked>
+              <div class="pay-opt-info">
+                <strong>💵 Cash on Delivery</strong>
+                <small>Pay when your custom candle arrives at your door</small>
+              </div>
+            </label>
+            <label class="pay-opt" id="pay-instapay">
+              <input type="radio" name="payment_method" value="instapay">
+              <div class="pay-opt-info">
+                <strong>📱 Instapay</strong>
+                <small>Transfer now and upload your payment screenshot</small>
+              </div>
+            </label>
+          </div>
+
+          <div id="co-instapay">
+            <p style="font-size:.83rem;color:var(--charcoal-lt);text-align:center;margin:0 0 10px;">
+              {{ content.get('instapay_instructions','Transfer the amount and upload your screenshot.') }}
+            </p>
+            <div class="ip-num">{{ content.get('instapay_number','01000000000') }}</div>
+            <div class="ip-name">{{ content.get('instapay_name','Candle K') }}</div>
+            <div id="co-upload">
+              <input type="file" id="co-file-input" name="payment_screenshot" accept="image/*,.pdf">
+              <div class="uz-icon">📎</div>
+              <div class="uz-text">
+                <strong>Click or drag your payment screenshot here</strong>
+                <small>PNG, JPG, PDF · max 10 MB</small>
+              </div>
+            </div>
+            <div id="co-upload-preview" style="margin-top:10px;text-align:center;"></div>
+            <div id="co-upload-err" style="color:#c0392b;font-size:.79rem;text-align:center;margin-top:6px;"></div>
+          </div>
+        </div>
+
+      </div><!-- /left -->
+
+      <!-- RIGHT: Price summary -->
+      <div>
+        <div class="price-box">
+          <h3>🕯️ Your Price</h3>
+
+          <div id="pr-placeholder" class="pr-placeholder">
+            Select a shape and size above<br>to see your price
+          </div>
+
+          <div id="pr-breakdown" style="display:none;">
+            <div class="pr-row"><span class="pl" id="pr-shape-lbl">Shape</span><span class="pv" id="pr-shape">0 EGP</span></div>
+            <div class="pr-row"><span class="pl" id="pr-size-lbl">Size</span><span class="pv" id="pr-size">0 EGP</span></div>
+            <div class="pr-row" id="pr-scent-row" style="display:none;"><span class="pl">Custom Scent</span><span class="pv" id="pr-scent">0 EGP</span></div>
+            <div class="pr-row" id="pr-msg-row" style="display:none;"><span class="pl">Engraved Message</span><span class="pv" id="pr-msg">0 EGP</span></div>
+            <div class="pr-row"><span class="pl">Quantity</span><span class="pv" id="pr-qty">× 1</span></div>
+            <div class="pr-div"></div>
+            <div class="pr-row"><span class="pl">Subtotal</span><span class="pv" id="pr-sub">0 EGP</span></div>
+            <div class="pr-row"><span class="pl">Shipping</span><span class="pv" id="pr-ship">{{ content.get('custom_price_shipping','60')|int }} EGP</span></div>
+            <div class="pr-div"></div>
+            <div class="pr-total">
+              <span class="tl">Total</span>
+              <span class="tv" id="pr-total">0 EGP</span>
+            </div>
+          </div>
+
+          <div id="pr-loading" style="display:none;text-align:center;padding:8px;color:var(--charcoal-lt);font-size:.82rem;">Calculating…</div>
+
+          <div class="pr-note">
+            {{ content.get('custom_order_note','Custom candles take 5–7 business days. We will confirm your quote within 24 hours.') }}
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn" disabled onclick="return validateForm()">
+            Place Custom Order →
+          </button>
+          <p style="font-size:.72rem;color:var(--charcoal-lt);text-align:center;margin-top:8px;">🔒 Secure · We confirm within 24 hours</p>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+const STATE = {shape:'',size:'',scent:'',intensity:'medium',color:''};
+const SHIP  = {{ content.get('custom_price_shipping','60')|int }};
+
+function fmt(n){ return Math.round(n).toLocaleString('en') + ' EGP'; }
+
+function pick(type, name, el){
+  document.querySelectorAll(`[data-type="${type}"]`).forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  STATE[type] = name;
+  document.getElementById('f_'+type).value = name;
+  calcPrice();
+}
+
+function pickScent(name, el){
+  document.querySelectorAll('.sc').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  STATE.scent = name;
+  document.getElementById('f_scent').value = name;
+  const isCustom = name.toLowerCase().includes('custom');
+  document.getElementById('scent-custom-box').style.display = isCustom ? 'block' : 'none';
+  calcPrice();
+}
+
+function pickIntensity(val, el){
+  document.querySelectorAll('.intens .copt').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  STATE.intensity = val;
+  document.getElementById('f_intensity').value = val;
+}
+
+function pickColor(name, el){
+  document.querySelectorAll('.col-dot').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  STATE.color = name;
+  document.getElementById('f_color').value = name;
+  document.getElementById('color-custom').value = '';
+}
+
+// Payment toggle
+document.querySelectorAll('.pay-opt').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.pay-opt').forEach(x=>x.classList.remove('on'));
+    el.classList.add('on');
+    const radio = el.querySelector('input[type=radio]');
+    radio.checked = true;
+    const ip = radio.value === 'instapay';
+    document.getElementById('co-instapay').classList.toggle('show', ip);
+  });
+});
+
+// Upload zone
+const zone = document.getElementById('co-upload');
+const inp  = document.getElementById('co-file-input');
+const prev = document.getElementById('co-upload-preview');
+const uerr = document.getElementById('co-upload-err');
+zone.addEventListener('click', ()=>inp.click());
+zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave', ()=>zone.classList.remove('drag'));
+zone.addEventListener('drop', e=>{
+  e.preventDefault(); zone.classList.remove('drag');
+  if(e.dataTransfer.files[0]) useFile(e.dataTransfer.files[0]);
+});
+inp.addEventListener('change', ()=>{ if(inp.files[0]) useFile(inp.files[0]); });
+function useFile(f){
+  if(f.size>10*1024*1024){ uerr.textContent='File too large (max 10MB)'; return; }
+  uerr.textContent = '';
+  const dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files;
+  zone.querySelector('.uz-icon').textContent='✅';
+  zone.querySelector('.uz-text').innerHTML=`<strong style="color:var(--leaf)">${f.name}</strong><small>${Math.round(f.size/1024)} KB — click to change</small>`;
+  zone.style.borderColor='var(--leaf)';
+  if(f.type.startsWith('image/')){
+    const r=new FileReader(); r.onload=e=>{prev.innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:160px;border-radius:6px;margin-top:8px;">`;};
+    r.readAsDataURL(f);
+  }
+}
+
+// Price calculator
+let calcTimer = null;
+function calcPrice(){
+  clearTimeout(calcTimer);
+  const qty    = parseInt(document.getElementById('qty-field').value)||1;
+  const hasMsg = document.getElementById('msg-field').value.trim().length > 0;
+  if(!STATE.shape || !STATE.size){ return; }
+  document.getElementById('pr-loading').style.display='block';
+  document.getElementById('pr-breakdown').style.display='none';
+  document.getElementById('pr-placeholder').style.display='none';
+  calcTimer = setTimeout(async()=>{
+    try{
+      const p = new URLSearchParams({
+        shape: STATE.shape, size: STATE.size, scent: STATE.scent,
+        has_message: hasMsg, qty: qty
+      });
+      const res  = await fetch(`/api/custom-order/price?${p}`);
+      const data = await res.json();
+      if(!data.success) return;
+      document.getElementById('pr-shape-lbl').textContent = `Shape (${STATE.shape})`;
+      document.getElementById('pr-shape').textContent     = fmt(data.breakdown.shape);
+      document.getElementById('pr-size-lbl').textContent  = `Size (${STATE.size})`;
+      document.getElementById('pr-size').textContent      = fmt(data.breakdown.size);
+      document.getElementById('pr-qty').textContent       = `× ${qty}`;
+      document.getElementById('pr-sub').textContent       = fmt(data.subtotal);
+      document.getElementById('pr-ship').textContent      = fmt(data.shipping);
+      document.getElementById('pr-total').textContent     = fmt(data.total);
+      if(data.breakdown.scent > 0){
+        document.getElementById('pr-scent-row').style.display='flex';
+        document.getElementById('pr-scent').textContent = fmt(data.breakdown.scent);
+      } else { document.getElementById('pr-scent-row').style.display='none'; }
+      if(data.breakdown.message > 0){
+        document.getElementById('pr-msg-row').style.display='flex';
+        document.getElementById('pr-msg').textContent = fmt(data.breakdown.message);
+      } else { document.getElementById('pr-msg-row').style.display='none'; }
+      document.getElementById('pr-breakdown').style.display='block';
+      document.getElementById('pr-loading').style.display='none';
+      document.getElementById('f_calc_price').value = data.total;
+      document.getElementById('submit-btn').disabled = false;
+    } catch(e){ document.getElementById('pr-loading').style.display='none'; }
+  }, 350);
+}
+
+function validateForm(){
+  if(STATE.shape==='Custom' || STATE.shape.toLowerCase().includes('custom')){
+    // custom shape typed — already in name
+  }
+  if(STATE.scent.toLowerCase().includes('custom')){
+    const v = document.getElementById('scent-custom-in').value.trim();
+    if(!v){ alert('Please describe your custom scent blend.'); return false; }
+    document.getElementById('f_scent').value = 'Custom: ' + v;
+  }
+  if(!STATE.shape){ alert('Please choose a candle shape.'); return false; }
+  if(!STATE.size) { alert('Please choose a candle size.');  return false; }
+  if(!STATE.scent){ alert('Please choose a scent.');        return false; }
+  const method = document.querySelector('input[name=payment_method]:checked')?.value;
+  if(method==='instapay' && (!inp.files || !inp.files.length)){
+    uerr.textContent = '⚠ Please upload your Instapay screenshot.';
+    document.getElementById('co-instapay').scrollIntoView({behavior:'smooth',block:'center'});
+    return false;
+  }
+  return true;
+}
+</script>
+{% endblock %}

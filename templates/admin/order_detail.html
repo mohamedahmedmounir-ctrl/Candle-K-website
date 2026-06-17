@@ -1,0 +1,219 @@
+{% extends "admin/base.html" %}
+{% block title %}Order {{ order.order_number }} — Admin{% endblock %}
+{% block page_title %}Order Detail{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_orders') }}" class="admin-btn admin-btn-secondary">← Back to Orders</a>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start;">
+
+  <!-- Left: Order Items + Customer -->
+  <div>
+    <!-- Order Items -->
+    <div class="admin-card" style="margin-bottom:24px;">
+      <div class="admin-card__header">
+        <div class="admin-card__title">Order Items</div>
+        <span class="status status-{{ order.status }}">{{ order.status.replace('_', ' ') }}</span>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Qty</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td style="color:var(--cream);">{{ item.product_name }}</td>
+            <td style="color:var(--text);">{{ item.product_price | int }} EGP</td>
+            <td style="color:var(--text);">{{ item.quantity }}</td>
+            <td style="color:var(--cream); font-family:var(--font-serif);">{{ (item.product_price * item.quantity) | int }} EGP</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align:right; color:var(--text-dim); font-size:0.82rem; padding:12px 16px;">Subtotal</td>
+            <td style="color:var(--text); padding:12px 16px;">{{ order.subtotal | int }} EGP</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align:right; color:var(--text-dim); font-size:0.82rem; padding:8px 16px;">Shipping</td>
+            <td style="color:var(--text); padding:8px 16px;">{{ 'Free' if order.shipping == 0 else (order.shipping | int ~ ' EGP') }}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align:right; color:var(--cream); font-size:1rem; padding:12px 16px; font-weight:600;">Total</td>
+            <td style="color:var(--gold-light); font-family:var(--font-serif); font-size:1.3rem; padding:12px 16px;">{{ order.total | int }} EGP</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Customer Info -->
+    <div class="admin-card" style="margin-bottom:24px;">
+      <div class="admin-card__header"><div class="admin-card__title">Customer Information</div></div>
+      <div class="admin-card__body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <div>
+            <div style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Name</div>
+            <div style="color:var(--cream);">{{ order.customer_name }}</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Phone</div>
+            <div style="color:var(--cream);">{{ order.customer_phone }}</div>
+          </div>
+          {% if order.customer_email %}
+          <div>
+            <div style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Email</div>
+            <div style="color:var(--cream);">{{ order.customer_email }}</div>
+          </div>
+          {% endif %}
+          <div>
+            <div style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">City</div>
+            <div style="color:var(--cream);">{{ order.city }}</div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <div style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Address</div>
+            <div style="color:var(--cream);">{{ order.address }}</div>
+          </div>
+          {% if order.notes %}
+          <div style="grid-column:1/-1;">
+            <div style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Notes</div>
+            <div style="color:var(--text); font-style:italic;">{{ order.notes }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Proof (Instapay) -->
+    {% if order.payment_screenshot %}
+    <div class="admin-card">
+      <div class="admin-card__header" style="background:rgba(232,160,160,.08);border-color:rgba(232,160,160,.2);">
+        <div class="admin-card__title" style="color:var(--pink);">📸 Instapay Payment Screenshot</div>
+        <span class="status status-pending_verification" style="font-size:.72rem;">Needs Verification</span>
+      </div>
+      <div class="admin-card__body" style="padding:0;">
+        <!-- Image viewer -->
+        <div style="background:var(--surface-2);text-align:center;padding:24px;border-bottom:1px solid var(--border);">
+          <img src="{{ url_for('uploaded_payment', filename=order.payment_screenshot) }}"
+               alt="Payment proof"
+               id="proof-img"
+               style="max-width:100%;max-height:480px;object-fit:contain;border-radius:4px;cursor:zoom-in;transition:transform .3s;"
+               onclick="this.style.maxHeight=this.style.maxHeight==='none'?'480px':'none';this.style.cursor=this.style.cursor==='zoom-out'?'zoom-in':'zoom-out';">
+        </div>
+        <div style="padding:16px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px;">File</div>
+            <div style="font-size:.85rem;color:var(--text);">{{ order.payment_screenshot }}</div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <a href="{{ url_for('uploaded_payment', filename=order.payment_screenshot) }}"
+               target="_blank"
+               class="admin-btn admin-btn-secondary admin-btn-sm">
+              🔍 Open Full Size
+            </a>
+            <a href="{{ url_for('uploaded_payment', filename=order.payment_screenshot) }}"
+               download="{{ order.payment_screenshot }}"
+               class="admin-btn admin-btn-secondary admin-btn-sm">
+              ⬇ Download
+            </a>
+          </div>
+        </div>
+        <div style="padding:12px 22px;background:rgba(212,160,85,.06);border-top:1px solid var(--border);">
+          <p style="font-size:.82rem;color:#c8a060;">
+            ⚠️ Please verify this screenshot matches the expected amount of
+            <strong style="color:var(--ivory);">{{ order.total | int }} EGP</strong>
+            before updating the order status to <strong style="color:var(--green);">Paid</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: Status + Actions -->
+  <div>
+    <div class="admin-card" style="margin-bottom:24px;">
+      <div class="admin-card__header"><div class="admin-card__title">Order Status</div></div>
+      <div class="admin-card__body">
+        <div style="margin-bottom:16px;">
+          <div style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px;">Current Status</div>
+          <span class="status status-{{ order.status }}" style="font-size:0.85rem; padding:6px 14px;">{{ order.status.replace('_', ' ') }}</span>
+        </div>
+        <form action="{{ url_for('admin_order_status', oid=order.id) }}" method="POST">
+          <div class="admin-form-group">
+            <label>Update Status</label>
+            <select name="status" class="admin-select">
+              <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>⏳ Pending</option>
+              <option value="pending_verification" {% if order.status == 'pending_verification' %}selected{% endif %}>🔍 Pending Verification</option>
+              <option value="paid" {% if order.status == 'paid' %}selected{% endif %}>✅ Paid</option>
+              <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>📦 Processing</option>
+              <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>🚚 Shipped</option>
+              <option value="out_for_delivery" {% if order.status == 'out_for_delivery' %}selected{% endif %}>🏠 Out for Delivery</option>
+              <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>🎉 Delivered</option>
+              <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
+            </select>
+          </div>
+          <div class="admin-form-group">
+            <label>Tracking Number (optional)</label>
+            <input type="text" name="tracking_number" class="admin-input" value="{{ order.tracking_number or '' }}" placeholder="e.g. EG123456789">
+          </div>
+          <div class="admin-form-group">
+            <label>Custom Message for Customer (optional)</label>
+            <textarea name="tracking_message" class="admin-input" rows="2" placeholder="Leave blank for automatic message..."></textarea>
+          </div>
+          <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; justify-content:center;">✉️ Update & Notify Customer</button>
+
+        <!-- WhatsApp quick message -->
+        {% if site.get('contact_whatsapp') %}
+        <a href="https://wa.me/{{ site.contact_whatsapp }}?text={{ ('Order ' ~ order.order_number ~ ' Update: ' ~ order.status.replace('_',' ').title() ~ ' - Track: ' ~ site.get('store_url','') ~ '/track/' ~ order.order_number) | urlencode }}"
+           target="_blank"
+           class="admin-btn admin-btn-secondary" style="width:100%;justify-content:center;margin-top:8px;background:#25D366;color:white;border-color:#25D366;">
+          💬 Message Customer on WhatsApp
+        </a>
+        {% endif %}
+          <p style="font-size:.73rem;color:#999;text-align:center;margin-top:8px;">Customer will receive an email automatically</p>
+        </form>
+
+        {% if tracking %}
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0;">
+          <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:12px;">Order Timeline</div>
+          {% for event in tracking|reverse %}
+          <div style="display:flex;gap:10px;margin-bottom:12px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--pink);flex-shrink:0;margin-top:5px;"></div>
+            <div>
+              <div style="font-size:.85rem;font-weight:600;color:#2C2A27;">{{ event.title }}</div>
+              {% if event.message %}<div style="font-size:.78rem;color:#7A736A;margin-top:2px;">{{ event.message }}</div>{% endif %}
+              <div style="font-size:.72rem;color:#C8BFB0;margin-top:2px;">{{ event.created_at[:16] }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card__header"><div class="admin-card__title">Order Info</div></div>
+      <div class="admin-card__body">
+        {% set info = [
+          ('Order #', order.order_number),
+          ('Date', order.created_at[:16]),
+          ('Payment', 'Cash on Delivery' if order.payment_method == 'cod' else 'Instapay'),
+        ] %}
+        {% for label, value in info %}
+        <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:0.85rem;">
+          <span style="color:var(--text-dim);">{{ label }}</span>
+          <span style="color:var(--cream); text-align:right; max-width:180px; word-break:break-all;">{{ value }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

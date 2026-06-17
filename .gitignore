@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+
+# Environment & secrets
+.env
+*.env
+
+# Database (never commit — contains real orders/customer data)
+candle_k.db
+*.db
+*.sqlite
+
+# Uploaded files (too large for git, back up separately)
+uploads/products/*
+uploads/payments/*
+!uploads/products/.gitkeep
+!uploads/payments/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log

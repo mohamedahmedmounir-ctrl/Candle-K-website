@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block title %}Reviews{% endblock %}
+{% block content %}
+<div class="page-header"><h1>⭐ Customer Reviews</h1></div>
+<div class="admin-card">
+  <table class="admin-table">
+    <thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Review</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for r in reviews %}
+    <tr>
+      <td style="font-size:.85rem;font-weight:600;">{{ r.product_name }}</td>
+      <td>
+        <div style="font-size:.85rem;">{{ r.customer_name }}</div>
+        {% if r.customer_email %}<div style="font-size:.75rem;color:#999;">{{ r.customer_email }}</div>{% endif %}
+      </td>
+      <td><span style="color:#f39c12;font-size:1rem;">{{ '★' * r.rating }}{{ '☆' * (5 - r.rating) }}</span></td>
+      <td style="max-width:240px;">
+        {% if r.title %}<div style="font-weight:600;font-size:.85rem;margin-bottom:3px;">{{ r.title }}</div>{% endif %}
+        <div style="font-size:.83rem;color:#555;line-height:1.5;">{{ r.body }}</div>
+      </td>
+      <td style="font-size:.78rem;color:#999;">{{ r.created_at[:10] }}</td>
+      <td>{% if r.is_approved %}<span class="badge badge-success">Live</span>{% else %}<span class="badge badge-warning">Pending</span>{% endif %}</td>
+      <td>
+        {% if not r.is_approved %}
+        <form method="POST" style="display:inline"><input type="hidden" name="action" value="approve"><input type="hidden" name="id" value="{{ r.id }}">
+        <button type="submit" class="btn btn-sm btn-success">✓ Approve</button></form>
+        {% endif %}
+        <form method="POST" style="display:inline" onsubmit="return confirm('Delete this review?')">
+        <input type="hidden" name="action" value="reject"><input type="hidden" name="id" value="{{ r.id }}">
+        <button type="submit" class="btn btn-sm btn-danger">Delete</button></form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;color:#999;padding:30px;">No reviews yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

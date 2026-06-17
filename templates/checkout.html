@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Checkout — Candle K{% endblock %}
+{% block content %}
+<style>
+:root{--ivory:#F7F5EC;--charcoal:#2C2A27;--charcoal-lt:#7A736A;--pink:#E8A0A0;--pink-deep:#C97878;--leaf:#8FA882;--sand:#DDD8CE;}
+.ck-checkout{max-width:1100px;margin:60px auto;padding:0 24px;display:grid;grid-template-columns:1fr 400px;gap:40px;}
+@media(max-width:860px){.ck-checkout{grid-template-columns:1fr;}}
+.ck-form-card{background:#fff;border:1px solid var(--sand);border-radius:8px;padding:36px;margin-bottom:20px;}
+.ck-form-card h2{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--charcoal);margin:0 0 24px;padding-bottom:14px;border-bottom:1px solid var(--sand);}
+.ck-form-card h3{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--charcoal-lt);margin:24px 0 14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:540px){.form-row{grid-template-columns:1fr;}}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.field label{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--charcoal-lt);}
+.field input,.field textarea{padding:12px 14px;border:1px solid var(--sand);border-radius:4px;font-size:.93rem;color:var(--charcoal);background:var(--ivory);transition:border .2s;font-family:inherit;}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--pink-deep);}
+.field textarea{min-height:76px;resize:vertical;}
+.pay-methods{display:flex;flex-direction:column;gap:10px;}
+.pay-method{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:2px solid var(--sand);border-radius:6px;cursor:pointer;transition:all .2s;position:relative;}
+.pay-method input[type=radio]{accent-color:var(--pink-deep);width:17px;height:17px;flex-shrink:0;margin-top:3px;}
+.pay-method.active{border-color:var(--pink-deep);background:#FDF7F7;}
+.pay-method-info strong{display:block;font-size:.95rem;color:var(--charcoal);margin-bottom:2px;}
+.pay-method-info small{font-size:.79rem;color:var(--charcoal-lt);}
+#instapay-info{display:none;margin-top:16px;padding:20px;background:#FDF5ED;border:1px dashed #E2B587;border-radius:8px;}
+#instapay-info.show{display:block;}
+.ip-num{font-family:'Cormorant Garamond',serif;font-size:1.8rem;text-align:center;color:var(--charcoal);letter-spacing:.04em;margin:8px 0 2px;}
+.ip-name{text-align:center;font-size:.8rem;color:var(--charcoal-lt);margin-bottom:14px;}
+#upload-zone{display:none;border:2px dashed var(--sand);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:all .25s;background:#fff;margin-top:12px;}
+#upload-zone.show{display:block;}
+#upload-zone:hover,#upload-zone.drag{border-color:var(--pink-deep);background:#FDF7F7;}
+#upload-zone .uz-icon{font-size:2.2rem;margin-bottom:8px;}
+#upload-zone .uz-text strong{color:var(--pink-deep);font-size:.9rem;}
+#upload-zone .uz-text small{display:block;color:var(--charcoal-lt);font-size:.76rem;margin-top:4px;}
+#screenshot-input{display:none;}
+#payment-preview{margin-top:10px;text-align:center;}
+.promo-row{display:flex;gap:10px;}
+.promo-row input{flex:1;padding:11px 14px;border:1px solid var(--sand);border-radius:4px;font-size:.9rem;color:var(--charcoal);background:var(--ivory);font-family:inherit;}
+.promo-row input:focus{outline:none;border-color:var(--pink-deep);}
+.btn-promo{padding:11px 18px;background:var(--charcoal);color:var(--ivory);border:none;border-radius:4px;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:background .2s;}
+.btn-promo:hover{background:var(--pink-deep);}
+#promo-msg{font-size:.8rem;margin-top:8px;}
+#promo-msg.ok{color:var(--leaf);}
+#promo-msg.err{color:#c0392b;}
+.ck-summary{background:#fff;border:1px solid var(--sand);border-radius:8px;padding:28px;position:sticky;top:90px;}
+.ck-summary h2{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--charcoal);margin:0 0 18px;padding-bottom:12px;border-bottom:1px solid var(--sand);}
+.s-item{display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--sand);}
+.s-item:last-of-type{border-bottom:none;}
+.s-img{width:50px;height:50px;border-radius:4px;object-fit:cover;background:var(--ivory);flex-shrink:0;}
+.s-ph{width:50px;height:50px;border-radius:4px;background:var(--ivory);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.s-name{font-size:.85rem;color:var(--charcoal);line-height:1.4;}
+.s-qty{font-size:.74rem;color:var(--charcoal-lt);margin-top:2px;}
+.s-price{margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--charcoal);white-space:nowrap;}
+.s-totals{margin-top:14px;padding-top:14px;border-top:1px solid var(--sand);}
+.s-row{display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:8px;color:var(--charcoal-lt);}
+.s-row.total{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--charcoal);margin-top:10px;padding-top:10px;border-top:1px solid var(--sand);}
+.btn-place{width:100%;margin-top:18px;padding:16px;background:var(--charcoal);color:var(--ivory);border:none;border-radius:4px;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .25s;font-family:inherit;}
+.btn-place:hover{background:var(--pink-deep);}
+.safe-note{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:10px;font-size:.72rem;color:var(--charcoal-lt);}
+</style>
+
+<div class="ck-checkout">
+  <div>
+    <form id="ck-form" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="promo_code" id="h-promo">
+      <input type="hidden" name="discount_amount" id="h-disc" value="0">
+      <input type="hidden" name="discount_type" id="h-dtype" value="">
+
+      <div class="ck-form-card">
+        <h2>🕯️ Your Details</h2>
+        <div class="form-row">
+          <div class="field"><label>Full Name *</label><input type="text" name="name" required placeholder="Sara Ahmed"></div>
+          <div class="field"><label>Phone *</label><input type="tel" name="phone" required placeholder="+20 100 000 0000"></div>
+        </div>
+        <div class="field"><label>Email (for order updates)</label><input type="email" name="email" placeholder="sara@example.com"></div>
+        <h3>Delivery Address</h3>
+        <div class="field"><label>Street Address *</label><input type="text" name="address" required placeholder="123 El Nasr Street, Apt 4B"></div>
+        <div class="field"><label>City *</label><input type="text" name="city" required placeholder="Cairo"></div>
+        <div class="field"><label>Order Notes</label><textarea name="notes" placeholder="Any special delivery instructions..."></textarea></div>
+      </div>
+
+      <div class="ck-form-card">
+        <h2>💳 Payment</h2>
+        <div class="pay-methods">
+          <label class="pay-method active">
+            <input type="radio" name="payment_method" value="cod" checked>
+            <div class="pay-method-info"><strong>💵 Cash on Delivery</strong><small>Pay when your candles arrive</small></div>
+          </label>
+          <label class="pay-method">
+            <input type="radio" name="payment_method" value="instapay">
+            <div class="pay-method-info"><strong>📱 Instapay</strong><small>Transfer &amp; upload screenshot</small></div>
+          </label>
+        </div>
+
+        <div id="instapay-info">
+          <p style="font-size:.82rem;color:var(--charcoal-lt);text-align:center;margin:0 0 8px;">{{ content.instapay_instructions }}</p>
+          <div class="ip-num">{{ content.instapay_number }}</div>
+          <div class="ip-name">{{ content.instapay_name }}</div>
+          <div id="upload-zone">
+            <input type="file" id="screenshot-input" name="payment_screenshot" accept="image/*,.pdf">
+            <div class="uz-icon">📎</div>
+            <div class="uz-text">
+              <strong>Click or drag your payment screenshot here</strong>
+              <small>PNG, JPG, PDF · max 10 MB</small>
+            </div>
+          </div>
+          <div id="payment-preview"></div>
+          <div id="upload-err" style="color:#c0392b;font-size:.79rem;text-align:center;margin-top:6px;"></div>
+        </div>
+
+        <h3 style="margin-top:24px;">Promo Code</h3>
+        <div class="promo-row">
+          <input type="text" id="promo-in" placeholder="Enter code e.g. CANDLE20" autocomplete="off">
+          <button type="button" class="btn-promo" id="promo-btn">Apply</button>
+        </div>
+        <div id="promo-msg"></div>
+      </div>
+
+    </form>
+  </div>
+
+  <div>
+    <div class="ck-summary">
+      <h2>Order Summary</h2>
+      {% set cart = session.get('cart', {}) %}
+      {% for pid, item in cart.items() %}
+      <div class="s-item">
+        {% if item.image %}
+        <img src="/uploads/products/{{ item.image }}" class="s-img" alt="{{ item.name }}">
+        {% else %}<div class="s-ph">🕯️</div>{% endif %}
+        <div><div class="s-name">{{ item.name }}</div><div class="s-qty">× {{ item.qty }}</div></div>
+        <div class="s-price">{{ (item.price * item.qty)|currency }} EGP</div>
+      </div>
+      {% endfor %}
+      <div class="s-totals">
+        <div class="s-row"><span>Subtotal</span><span id="s-sub">{{ subtotal|currency }} EGP</span></div>
+        <div class="s-row" id="s-disc-row" style="display:none"><span id="s-disc-lbl">Discount</span><span id="s-disc-val" style="color:var(--leaf)"></span></div>
+        <div class="s-row"><span>Shipping</span><span id="s-ship">{% if shipping == 0 %}🎁 Free{% else %}{{ shipping|currency }} EGP{% endif %}</span></div>
+        <div class="s-row total"><span>Total</span><span id="s-total">{{ total|currency }} EGP</span></div>
+      </div>
+      <button type="submit" form="ck-form" class="btn-place">Place Order →</button>
+      <div class="safe-note">🔒 Secure checkout</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUBTOTAL = {{ subtotal }};
+const BASE_SHIP = {{ shipping }};
+let disc = 0, discType = '', promoCode = '';
+
+function fmt(n){ return Math.round(n).toLocaleString('en-EG'); }
+
+function updateTotals(){
+  let ship = (discType==='shipping') ? 0 : BASE_SHIP;
+  const total = SUBTOTAL - disc + ship;
+  document.getElementById('s-sub').textContent   = fmt(SUBTOTAL)+' EGP';
+  document.getElementById('s-ship').textContent  = ship===0 ? '🎁 Free' : fmt(ship)+' EGP';
+  document.getElementById('s-total').textContent = fmt(total)+' EGP';
+  document.getElementById('h-disc').value  = disc;
+  document.getElementById('h-promo').value = promoCode;
+  document.getElementById('h-dtype').value = discType;
+}
+
+// Promo
+document.getElementById('promo-btn').addEventListener('click', async () => {
+  const code = document.getElementById('promo-in').value.trim();
+  const msg  = document.getElementById('promo-msg');
+  if(!code){ msg.textContent='Enter a code first.'; msg.className=''; return; }
+  msg.textContent='Checking...'; msg.className='';
+  const fd = new FormData(); fd.append('code',code); fd.append('subtotal',SUBTOTAL);
+  try {
+    const r = await fetch('/promo/apply',{method:'POST',body:fd});
+    const d = await r.json();
+    if(d.success){
+      disc=d.discount||0; discType=d.type||''; promoCode=d.code;
+      msg.textContent='✓ '+d.message; msg.className='ok';
+      const row=document.getElementById('s-disc-row'); row.style.display='flex';
+      document.getElementById('s-disc-lbl').textContent=`Discount (${d.code})`;
+      document.getElementById('s-disc-val').textContent=discType==='shipping'?'Free shipping':'−'+fmt(disc)+' EGP';
+      updateTotals();
+    } else { msg.textContent='✗ '+d.error; msg.className='err'; }
+  } catch(e){ msg.textContent='Error, try again.'; msg.className='err'; }
+});
+document.getElementById('promo-in').addEventListener('keydown', e=>{ if(e.key==='Enter'){e.preventDefault();document.getElementById('promo-btn').click();} });
+
+// Payment toggle
+document.querySelectorAll('.pay-method').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.pay-method').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    const radio = el.querySelector('input[type=radio]'); radio.checked = true;
+    const ip = radio.value === 'instapay';
+    document.getElementById('instapay-info').classList.toggle('show', ip);
+    document.getElementById('upload-zone').classList.toggle('show', ip);
+  });
+});
+
+// Upload zone
+const zone  = document.getElementById('upload-zone');
+const inp   = document.getElementById('screenshot-input');
+const prev  = document.getElementById('payment-preview');
+const uerr  = document.getElementById('upload-err');
+zone.addEventListener('click', ()=>inp.click());
+zone.addEventListener('dragover',  e=>{e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave', ()=>zone.classList.remove('drag'));
+zone.addEventListener('drop', e=>{
+  e.preventDefault(); zone.classList.remove('drag');
+  if(e.dataTransfer.files[0]) useFile(e.dataTransfer.files[0]);
+});
+inp.addEventListener('change', ()=>{ if(inp.files[0]) useFile(inp.files[0]); });
+
+function useFile(f){
+  if(f.size>10*1024*1024){ uerr.textContent='File too large (max 10 MB)'; return; }
+  uerr.textContent='';
+  const dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files;
+  zone.querySelector('.uz-icon').textContent='✅';
+  zone.querySelector('.uz-text').innerHTML=`<strong style="color:var(--leaf)">${f.name}</strong><small>${Math.round(f.size/1024)} KB — click to change</small>`;
+  zone.style.borderColor='var(--leaf)';
+  if(f.type.startsWith('image/')){
+    const r=new FileReader(); r.onload=e=>{ prev.innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:180px;border-radius:6px;margin-top:8px;">`; }; r.readAsDataURL(f);
+  }
+}
+
+// Submit validation
+document.getElementById('ck-form').addEventListener('submit', e=>{
+  const method = document.querySelector('input[name=payment_method]:checked')?.value;
+  if(method==='instapay' && (!inp.files||!inp.files.length)){
+    e.preventDefault();
+    uerr.textContent='⚠ Please upload your Instapay payment screenshot.';
+    zone.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+});
+</script>
+{% endblock %}

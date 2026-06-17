@@ -1,0 +1,94 @@
+{% extends "admin/base.html" %}
+{% block title %}Promo Codes{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Promo Codes</h1></div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<div class="admin-card" style="margin-bottom:28px;">
+  <h2 style="font-size:1rem;margin:0 0 20px;">Create New Code</h2>
+  <form method="POST" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;align-items:end;">
+    <input type="hidden" name="action" value="add">
+    <div class="form-group" style="margin:0;">
+      <label>Code *</label>
+      <input type="text" name="code" required placeholder="SUMMER20" style="text-transform:uppercase;">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Type</label>
+      <select name="discount_type">
+        <option value="percent">Percent (%)</option>
+        <option value="fixed">Fixed (EGP)</option>
+        <option value="shipping">Free Shipping</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Value</label>
+      <input type="number" name="discount_value" required placeholder="20" step="0.01" min="0">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Min Order (EGP)</label>
+      <input type="number" name="min_order" placeholder="0" step="1" min="0" value="0">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Max Uses</label>
+      <input type="number" name="max_uses" placeholder="Unlimited" step="1" min="1">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Expires At</label>
+      <input type="datetime-local" name="expires_at">
+    </div>
+    <div style="padding-top:2px;">
+      <button type="submit" class="btn btn-primary" style="width:100%;">Create Code</button>
+    </div>
+  </form>
+</div>
+
+<div class="admin-card">
+  <table class="admin-table">
+    <thead><tr>
+      <th>Code</th><th>Type</th><th>Value</th><th>Min Order</th>
+      <th>Uses</th><th>Expires</th><th>Status</th><th>Actions</th>
+    </tr></thead>
+    <tbody>
+    {% for p in promos %}
+    <tr>
+      <td><strong style="font-family:monospace;letter-spacing:.05em;font-size:.95rem;">{{ p.code }}</strong></td>
+      <td>
+        {% if p.discount_type == 'percent' %}🏷️ Percent
+        {% elif p.discount_type == 'fixed' %}💰 Fixed
+        {% else %}🚚 Shipping{% endif %}
+      </td>
+      <td>
+        {% if p.discount_type == 'percent' %}{{ p.discount_value|int }}%
+        {% elif p.discount_type == 'fixed' %}{{ p.discount_value|int }} EGP
+        {% else %}Free{% endif %}
+      </td>
+      <td>{% if p.min_order > 0 %}{{ p.min_order|int }} EGP{% else %}—{% endif %}</td>
+      <td>{{ p.uses_count }}{% if p.max_uses %} / {{ p.max_uses }}{% else %} / ∞{% endif %}</td>
+      <td>{% if p.expires_at %}{{ p.expires_at[:10] }}{% else %}Never{% endif %}</td>
+      <td>
+        {% if p.is_active %}<span class="badge badge-success">Active</span>
+        {% else %}<span class="badge badge-danger">Inactive</span>{% endif %}
+      </td>
+      <td>
+        <form method="POST" style="display:inline">
+          <input type="hidden" name="action" value="toggle">
+          <input type="hidden" name="id" value="{{ p.id }}">
+          <button type="submit" class="btn btn-sm btn-secondary">{{ 'Disable' if p.is_active else 'Enable' }}</button>
+        </form>
+        <form method="POST" style="display:inline" onsubmit="return confirm('Delete this code?')">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="id" value="{{ p.id }}">
+          <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">No promo codes yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

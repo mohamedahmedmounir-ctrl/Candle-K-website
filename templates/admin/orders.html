@@ -1,0 +1,93 @@
+{% extends "admin/base.html" %}
+{% block title %}Orders — Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_orders_export') }}" class="admin-btn admin-btn-secondary">Export CSV</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Status Filter Tabs -->
+<div class="admin-tabs" style="margin-bottom:24px;">
+  <a href="{{ url_for('admin_orders') }}" class="admin-tab {% if not current_status %}active{% endif %}">All</a>
+  <a href="{{ url_for('admin_orders', status='pending') }}" class="admin-tab {% if current_status == 'pending' %}active{% endif %}">Pending</a>
+  <a href="{{ url_for('admin_orders', status='pending_verification') }}" class="admin-tab {% if current_status == 'pending_verification' %}active{% endif %}">Verify Instapay</a>
+  <a href="{{ url_for('admin_orders', status='paid') }}" class="admin-tab {% if current_status == 'paid' %}active{% endif %}">Paid</a>
+  <a href="{{ url_for('admin_orders', status='shipped') }}" class="admin-tab {% if current_status == 'shipped' %}active{% endif %}">Shipped</a>
+  <a href="{{ url_for('admin_orders', status='delivered') }}" class="admin-tab {% if current_status == 'delivered' %}active{% endif %}">Delivered</a>
+  <a href="{{ url_for('admin_orders', status='cancelled') }}" class="admin-tab {% if current_status == 'cancelled' %}active{% endif %}">Cancelled</a>
+</div>
+
+<div class="admin-filter-bar">
+  <div class="admin-search">
+    <svg class="admin-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="table-search" placeholder="Search by name, order #, phone…">
+  </div>
+</div>
+
+<div class="admin-card">
+  <table class="data-table" id="filterable-table">
+    <thead>
+      <tr>
+        <th>Order #</th>
+        <th>Customer</th>
+        <th>Items</th>
+        <th>Total</th>
+        <th>Payment</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td style="font-family:var(--font-serif); color:var(--gold-light); font-size:0.9rem;">{{ order.order_number }}</td>
+        <td>
+          <div style="color:var(--cream); font-weight:500;">{{ order.customer_name }}</div>
+          <div style="font-size:0.75rem; color:var(--text-dim);">{{ order.customer_phone }}</div>
+          <div style="font-size:0.75rem; color:var(--text-dim);">{{ order.city }}</div>
+        </td>
+        <td style="color:var(--text-dim); font-size:0.85rem;">—</td>
+        <td style="color:var(--cream); font-family:var(--font-serif);">{{ order.total | int }} EGP</td>
+        <td>
+          {% if order.payment_method == 'instapay' %}
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:.8rem;color:var(--blue);">📲 Instapay</span>
+            {% if order.payment_screenshot %}
+            <span style="background:rgba(123,168,200,.15);color:var(--blue);font-size:.62rem;padding:2px 7px;border-radius:2px;letter-spacing:.08em;font-weight:500;">SCREENSHOT ✓</span>
+            {% else %}
+            <span style="background:rgba(217,119,119,.15);color:var(--red);font-size:.62rem;padding:2px 7px;border-radius:2px;letter-spacing:.08em;font-weight:500;">NO PROOF</span>
+            {% endif %}
+          </div>
+          {% else %}
+          <span style="font-size:.8rem;color:var(--text);">💵 Cash on Delivery</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="status status-{{ order.status }}">{{ order.status.replace('_', ' ') }}</span>
+        </td>
+        <td style="color:var(--text-dim); font-size:0.78rem; white-space:nowrap;">{{ order.created_at[:16] }}</td>
+        <td>
+          <a href="{{ url_for('admin_order_detail', oid=order.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">View</a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not orders %}
+      <tr><td colspan="8" style="text-align:center; color:var(--text-dim); padding:48px;">No orders found.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Override tab behavior - these are links, not buttons
+document.querySelectorAll('.admin-tabs .admin-tab').forEach(tab => {
+  tab.addEventListener('click', (e) => {
+    // Let the link navigate naturally
+  });
+});
+</script>
+{% endblock %}

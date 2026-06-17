@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2C2A27">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>{% block title %}Candle K — Pure Light, Pure Comfort{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ site.get('meta_description','Candle K — Handcrafted luxury candles made in Egypt.') }}{% endblock %}">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph (Facebook, WhatsApp previews) -->
+  <meta property="og:title"       content="{% block og_title %}Candle K — Pure Light, Pure Comfort{% endblock %}">
+  <meta property="og:description" content="{{ site.get('meta_description','Handcrafted luxury candles made in Egypt.') }}">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="{{ site.get('store_url','') }}{{ request.path }}">
+  <meta property="og:image"       content="{{ site.get('store_url','') }}/static/images/logo.jpeg">
+  <meta property="og:site_name"   content="{{ site.get('store_name','Candle K') }}">
+  <meta property="og:locale"      content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary">
+  <meta name="twitter:title"       content="Candle K — Pure Light, Pure Comfort">
+  <meta name="twitter:description" content="{{ site.get('meta_description','Handcrafted luxury candles.') }}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  {% if site.promo_active == 'true' and site.promo_title %}
+  <div class="promo-banner">
+    <strong>{{ site.promo_title }}</strong>{% if site.promo_subtitle %} — {{ site.promo_subtitle }}{% endif %}
+  </div>
+  {% endif %}
+
+  <nav class="nav">
+    <div class="container">
+      <div class="nav__inner">
+
+        <a href="{{ url_for('index') }}" class="nav__logo">
+          <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Candle K" class="nav__logo-img">
+        </a>
+
+        <ul class="nav__links">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('shop') }}">Shop</a></li>
+          {% for cat in categories %}
+          <li><a href="{{ url_for('shop', category=cat.slug) }}">{{ cat.name }}</a></li>
+          {% endfor %}
+          <li><a href="{{ url_for('custom_order') }}" style="color:var(--pink-deep);font-weight:500;">✨ Custom Order</a></li>
+        </ul>
+
+        <div class="nav__actions">
+          <div class="nav__search">
+            <button class="nav__icon nav__search-toggle" aria-label="Search">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <input type="text" placeholder="Search candles…" value="{{ request.args.get('q', '') }}">
+          </div>
+          <a href="{{ url_for('cart') }}" class="nav__icon nav__cart" aria-label="Cart">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <span class="nav__cart-count {% if cart_count == 0 %}hidden{% endif %}">{{ cart_count }}</span>
+          </a>
+          <button class="nav__mobile-toggle nav__icon" aria-label="Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Candle K" class="footer__logo-img">
+          <div class="footer__logo-name">Candle K</div>
+          <div class="footer__tagline">Pure light, pure comfort</div>
+          <p style="font-size:0.82rem; color:rgba(234,229,218,0.45); font-weight:300; max-width:250px; margin-bottom:18px; line-height:1.7;">{{ site.footer_text }}</p>
+          <div class="footer__social">
+            <a href="#" class="footer__social-link">ig</a>
+            <a href="#" class="footer__social-link">fb</a>
+            <a href="#" class="footer__social-link">wa</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer__heading">Shop</div>
+          <ul class="footer__links">
+            <li><a href="{{ url_for('shop') }}">All Candles</a></li>
+            {% for cat in categories %}<li><a href="{{ url_for('shop', category=cat.slug) }}">{{ cat.name }}</a></li>{% endfor %}
+            <li><a href="{{ url_for('custom_order') }}">✨ Custom Order</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer__heading">Help</div>
+          <ul class="footer__links">
+            <li><a href="#">Shipping Info</a></li>
+            <li><a href="#">Returns</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer__heading">Contact</div>
+          <div class="footer__contact">
+            {% if site.contact_email %}<a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a><br>{% endif %}
+            {% if site.contact_phone %}<a href="tel:{{ site.contact_phone }}">{{ site.contact_phone }}</a><br>{% endif %}
+            {% if site.contact_instagram %}{{ site.contact_instagram }}{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>© {{ now.year }} Candle K. All rights reserved.</span>
+        <span>Made with ♥ in Egypt</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

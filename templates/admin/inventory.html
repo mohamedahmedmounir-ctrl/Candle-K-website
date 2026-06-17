@@ -1,0 +1,64 @@
+{% extends "admin/base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block content %}
+<div class="page-header"><h1>📦 Inventory Management</h1></div>
+
+<div class="admin-card" style="margin-bottom:24px;">
+  <div class="admin-card__header"><div class="admin-card__title">Stock Levels</div></div>
+  <table class="admin-table">
+    <thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Status</th><th>Adjust Stock</th></tr></thead>
+    <tbody>
+    {% for p in products %}
+    <tr>
+      <td style="font-weight:600;font-size:.88rem;">{{ p.name }}</td>
+      <td style="font-size:.82rem;color:#999;">{{ p.category_name or '—' }}</td>
+      <td>
+        <span style="font-family:monospace;font-size:1.1rem;font-weight:700;color:{% if p.stock==0 %}#c0392b{% elif p.stock<=5 %}#f39c12{% else %}#27ae60{% endif %};">
+          {{ p.stock }}
+        </span>
+      </td>
+      <td>
+        {% if p.stock == 0 %}<span class="badge badge-danger">Out of Stock</span>
+        {% elif p.stock <= 5 %}<span class="badge badge-warning">Low Stock</span>
+        {% else %}<span class="badge badge-success">In Stock</span>{% endif %}
+      </td>
+      <td>
+        <form method="POST" action="/admin/inventory/adjust" style="display:flex;gap:8px;align-items:center;">
+          <input type="hidden" name="product_id" value="{{ p.id }}">
+          <input type="number" name="new_stock" value="{{ p.stock }}" min="0" style="width:80px;padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:.88rem;">
+          <input type="text" name="reason" placeholder="Reason" style="width:140px;padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:.82rem;" value="Manual adjustment">
+          <button type="submit" class="btn btn-sm btn-primary">Update</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="admin-card">
+  <div class="admin-card__header"><div class="admin-card__title">Inventory History</div></div>
+  <table class="admin-table">
+    <thead><tr><th>Product</th><th>Change</th><th>Before</th><th>After</th><th>Reference</th><th>Date</th></tr></thead>
+    <tbody>
+    {% for l in log %}
+    <tr>
+      <td style="font-size:.85rem;">{{ l.product_name }}</td>
+      <td>
+        <span style="font-weight:700;color:{% if l.quantity_change > 0 %}#27ae60{% else %}#c0392b{% endif %};">
+          {% if l.quantity_change > 0 %}+{% endif %}{{ l.quantity_change }}
+        </span>
+        <span style="font-size:.75rem;color:#999;margin-left:6px;">{{ l.change_type|replace('_',' ')|title }}</span>
+      </td>
+      <td style="color:#999;">{{ l.quantity_before }}</td>
+      <td style="font-weight:600;">{{ l.quantity_after }}</td>
+      <td style="font-size:.8rem;color:#999;">{{ l.reference or '—' }}</td>
+      <td style="font-size:.78rem;color:#999;">{{ l.created_at[:16] }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No inventory history yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

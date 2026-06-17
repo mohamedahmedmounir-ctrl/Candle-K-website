@@ -1,0 +1,213 @@
+{% extends "admin/base.html" %}
+{% block title %}Customize Options{% endblock %}
+{% block page_title %}Custom Candle Options{% endblock %}
+
+{% block content %}
+<style>
+.tab-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{padding:8px 20px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--text-dim);cursor:pointer;font-size:.83rem;transition:all .2s;}
+.tab.on{background:var(--pink);color:#fff;border-color:var(--pink);}
+.opts-section{display:none;}.opts-section.on{display:block;}
+.opt-row{display:grid;grid-template-columns:40px 1fr 1fr 80px 80px 50px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.opt-row:last-child{border-bottom:none;}
+.opt-icon{font-size:1.4rem;text-align:center;}
+.opt-name{font-size:.88rem;color:var(--cream);font-weight:500;}
+.opt-desc{font-size:.78rem;color:var(--text-dim);}
+.opt-price{font-size:.88rem;color:var(--gold-light);text-align:right;}
+.inactive-row{opacity:.45;}
+.add-form{background:var(--surface-2);border-radius:8px;padding:18px;margin-bottom:20px;border:1px solid var(--border);}
+.add-form h4{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin:0 0 14px;}
+.af-grid{display:grid;grid-template-columns:60px 1fr 2fr 100px 60px auto;gap:10px;align-items:end;}
+@media(max-width:800px){.af-grid{grid-template-columns:1fr 1fr;}}
+.af-group label{display:block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
+.af-group input,.af-group select{width:100%;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--cream);font-size:.85rem;font-family:inherit;box-sizing:border-box;}
+.misc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+</style>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="admin-alert admin-alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<p style="color:var(--text-dim);font-size:.85rem;margin-bottom:20px;">
+  These options appear on the <strong>Custom Candle Order</strong> page. Each shape, size, and scent has its own price that the customer sees live.
+</p>
+
+<!-- Tabs -->
+<div class="tab-row">
+  <button class="tab on" onclick="showTab('shapes',this)">🕯️ Shapes</button>
+  <button class="tab" onclick="showTab('sizes',this)">📏 Sizes</button>
+  <button class="tab" onclick="showTab('scents',this)">🌹 Scents</button>
+  <button class="tab" onclick="showTab('misc',this)">⚙️ Extra Charges</button>
+</div>
+
+{% for tab_key, tab_label, tab_icon in [('shapes','Shapes','shape'),('sizes','Sizes','size'),('scents','Scents','scent')] %}
+<div id="tab-{{ tab_key }}" class="opts-section {% if tab_key=='shapes' %}on{% endif %}">
+
+  <!-- Add new -->
+  <div class="add-form">
+    <h4>Add New {{ tab_label[:-1] }}</h4>
+    <form method="POST">
+      <input type="hidden" name="action" value="add">
+      <input type="hidden" name="option_type" value="{{ tab_icon }}">
+      <div class="af-grid">
+        <div class="af-group">
+          <label>Icon</label>
+          <input type="text" name="icon" placeholder="🕯️" maxlength="4">
+        </div>
+        <div class="af-group">
+          <label>Name *</label>
+          <input type="text" name="name" required placeholder="e.g. Pillar">
+        </div>
+        <div class="af-group">
+          <label>Description</label>
+          <input type="text" name="description" placeholder="Short description">
+        </div>
+        <div class="af-group">
+          <label>Price (EGP)</label>
+          <input type="number" name="price_extra" value="0" min="0" step="10">
+        </div>
+        <div class="af-group">
+          <label>Sort</label>
+          <input type="number" name="sort_order" value="99" min="1">
+        </div>
+        <div class="af-group">
+          <label>&nbsp;</label>
+          <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;">Add</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Existing options -->
+  <div class="admin-card">
+    <div class="admin-card__header">
+      <div class="admin-card__title">{{ tab_label }} ({{ grouped.get(tab_icon,[])|length }})</div>
+    </div>
+    <div class="admin-card__body" style="padding:0 20px;">
+      {% set items = grouped.get(tab_icon, []) %}
+      {% if items %}
+      {% for o in items %}
+      <div class="opt-row {% if not o.is_active %}inactive-row{% endif %}">
+        <div class="opt-icon">{{ o.icon or '—' }}</div>
+        <div>
+          <div class="opt-name">{{ o.name }}</div>
+          {% if o.description %}<div class="opt-desc">{{ o.description }}</div>{% endif %}
+        </div>
+        <div class="opt-desc">Sort: {{ o.sort_order }}</div>
+        <div class="opt-price">{% if o.price_extra > 0 %}{{ o.price_extra|int }} EGP{% else %}Base{% endif %}</div>
+        <div>
+          {% if o.is_active %}
+          <span class="badge badge-success" style="font-size:.7rem;">Active</span>
+          {% else %}
+          <span class="badge badge-danger" style="font-size:.7rem;">Hidden</span>
+          {% endif %}
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button onclick="openEdit({{ o.id }},'{{ o.name|e }}','{{ o.icon or '' }}','{{ o.description|e }}',{{ o.price_extra }},{{ o.sort_order }})"
+                  class="admin-btn admin-btn-secondary admin-btn-sm" title="Edit">✏️</button>
+          <form method="POST" style="display:inline">
+            <input type="hidden" name="action" value="toggle">
+            <input type="hidden" name="id" value="{{ o.id }}">
+            <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm" title="{{ 'Hide' if o.is_active else 'Show' }}">
+              {{ '👁' if o.is_active else '🚫' }}
+            </button>
+          </form>
+          <form method="POST" style="display:inline" onsubmit="return confirm('Delete this option?')">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="id" value="{{ o.id }}">
+            <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm" title="Delete">🗑</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p style="color:var(--text-dim);padding:20px 0;font-size:.85rem;">No {{ tab_label.lower() }} yet. Add one above.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Misc charges tab -->
+<div id="tab-misc" class="opts-section">
+  <div class="admin-card">
+    <div class="admin-card__header"><div class="admin-card__title">⚙️ Extra Charges & Shipping</div></div>
+    <div class="admin-card__body">
+      <form method="POST">
+        <input type="hidden" name="action" value="update_misc">
+        <div class="misc-grid">
+          <div class="af-group">
+            <label>Custom Scent Surcharge (EGP)</label>
+            <input type="number" name="custom_price_scent_surcharge"
+                   value="{{ site.get('custom_price_scent_surcharge','50') }}" min="0" step="5">
+            <small style="color:var(--text-dim);font-size:.75rem;display:block;margin-top:4px;">Added when customer picks a custom blend scent</small>
+          </div>
+          <div class="af-group">
+            <label>Engraved Message Surcharge (EGP)</label>
+            <input type="number" name="custom_price_message_surcharge"
+                   value="{{ site.get('custom_price_message_surcharge','30') }}" min="0" step="5">
+            <small style="color:var(--text-dim);font-size:.75rem;display:block;margin-top:4px;">Added when customer types a message on the candle</small>
+          </div>
+          <div class="af-group">
+            <label>Custom Order Shipping (EGP)</label>
+            <input type="number" name="custom_price_shipping"
+                   value="{{ site.get('custom_price_shipping','60') }}" min="0" step="5">
+            <small style="color:var(--text-dim);font-size:.75rem;display:block;margin-top:4px;">Fixed shipping fee for all custom orders</small>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <button type="submit" class="admin-btn admin-btn-primary">Save Charges</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border-radius:10px;padding:28px;width:480px;max-width:100%;border:1px solid var(--border);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:1rem;color:var(--cream);font-weight:600;">Edit Option</div>
+      <button onclick="document.getElementById('edit-modal').style.display='none'" style="background:none;border:none;color:var(--text-dim);font-size:1.4rem;cursor:pointer;">×</button>
+    </div>
+    <form method="POST" id="edit-form">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="id" id="edit-id">
+      <div style="display:grid;grid-template-columns:60px 1fr;gap:12px;margin-bottom:12px;">
+        <div class="af-group"><label>Icon</label><input type="text" name="icon" id="edit-icon" maxlength="4"></div>
+        <div class="af-group"><label>Name *</label><input type="text" name="name" id="edit-name" required></div>
+      </div>
+      <div class="af-group" style="margin-bottom:12px;"><label>Description</label><input type="text" name="description" id="edit-desc"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div class="af-group"><label>Price Extra (EGP)</label><input type="number" name="price_extra" id="edit-price" min="0" step="5"></div>
+        <div class="af-group"><label>Sort Order</label><input type="number" name="sort_order" id="edit-sort" min="1"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('edit-modal').style.display='none'" class="admin-btn admin-btn-secondary">Cancel</button>
+        <button type="submit" class="admin-btn admin-btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showTab(name, btn){
+  document.querySelectorAll('.opts-section').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  btn.classList.add('on');
+}
+function openEdit(id,name,icon,desc,price,sort){
+  document.getElementById('edit-id').value    = id;
+  document.getElementById('edit-name').value  = name;
+  document.getElementById('edit-icon').value  = icon;
+  document.getElementById('edit-desc').value  = desc;
+  document.getElementById('edit-price').value = price;
+  document.getElementById('edit-sort').value  = sort;
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+document.getElementById('edit-modal').addEventListener('click',function(e){
+  if(e.target===this) this.style.display='none';
+});
+</script>
+{% endblock %}

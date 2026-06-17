@@ -1,0 +1,98 @@
+{% extends "admin/base.html" %}
+{% block title %}Products — Admin{% endblock %}
+{% block page_title %}Products{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_product_add') }}" class="admin-btn admin-btn-primary">+ Add Product</a>
+{% endblock %}
+
+{% block content %}
+<div class="admin-filter-bar">
+  <div class="admin-search">
+    <svg class="admin-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="table-search" placeholder="Search products…">
+  </div>
+  <select class="admin-select" style="width:auto; min-width:160px;" onchange="filterCategory(this.value)">
+    <option value="">All Categories</option>
+    {% for cat in categories %}
+    <option value="{{ cat.id }}">{{ cat.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="admin-card">
+  <table class="data-table" id="filterable-table">
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Product</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr data-cat="{{ product.category_id }}">
+        <td>
+          {% if product.image %}
+          <img class="product-thumb" src="{{ url_for('uploaded_product', filename=product.image) }}" alt="{{ product.name }}">
+          {% else %}
+          <div class="product-thumb" style="display:flex; align-items:center; justify-content:center; background:var(--surface-2);">
+            <svg width="24" height="32" viewBox="0 0 120 160" fill="none"><rect x="40" y="60" width="40" height="90" rx="2" fill="#B8935A" opacity="0.4"/><path d="M60 60 C55 45 45 40 50 28 C52 35 58 32 60 20 C62 32 68 35 70 28 C75 40 65 45 60 60Z" fill="#B8935A" opacity="0.5"/></svg>
+          </div>
+          {% endif %}
+        </td>
+        <td>
+          <div style="color:var(--cream); font-weight:500;">{{ product.name }}</div>
+          <div style="font-size:0.75rem; color:var(--text-dim);">/{{ product.slug }}</div>
+        </td>
+        <td style="color:var(--text-dim);">{{ product.category_name or '—' }}</td>
+        <td>
+          <div style="color:var(--cream); font-family:var(--font-serif);">{{ product.price | int }} EGP</div>
+          {% if product.original_price %}
+          <div style="font-size:0.75rem; color:var(--text-dim); text-decoration:line-through;">{{ product.original_price | int }}</div>
+          {% endif %}
+        </td>
+        <td>
+          <span style="color:{% if product.stock > 10 %}var(--green){% elif product.stock > 0 %}var(--orange){% else %}var(--red){% endif %};">
+            {{ product.stock }}
+          </span>
+        </td>
+        <td>
+          {% if product.is_active %}
+          <span class="status status-paid">Active</span>
+          {% else %}
+          <span class="status status-cancelled">Inactive</span>
+          {% endif %}
+          {% if product.is_featured %}<span class="status status-shipped" style="margin-left:4px;">Featured</span>{% endif %}
+          {% if product.is_bestseller %}<span class="status status-shipped" style="margin-left:4px;">Bestseller</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <a href="{{ url_for('admin_product_edit', pid=product.id) }}" class="admin-btn admin-btn-secondary admin-btn-sm">Edit</a>
+            <form action="{{ url_for('admin_product_delete', pid=product.id) }}" method="POST" style="display:inline;">
+              <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm" data-confirm="Archive this product?">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not products %}
+      <tr><td colspan="7" style="text-align:center; color:var(--text-dim); padding:48px;">No products yet. <a href="{{ url_for('admin_product_add') }}" style="color:var(--gold-light);">Add your first product</a>.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterCategory(catId) {
+  document.querySelectorAll('#filterable-table tbody tr').forEach(row => {
+    row.style.display = (!catId || row.dataset.cat === catId) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

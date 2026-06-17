@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed — Candle K{% endblock %}
+
+{% block content %}
+<div class="success-page">
+  <div style="max-width:560px; width:100%;">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+
+    {% if order and order.payment_method == 'instapay' %}
+    <div class="section-label" style="text-align:center; margin-bottom:12px;">Pending Verification</div>
+    <h1 style="font-family:var(--font-serif); font-size:2.8rem; font-style:italic; color:var(--dark); margin-bottom:16px;">Order Received!</h1>
+    <p style="color:var(--text-light); font-size:0.95rem; line-height:1.7; margin-bottom:8px;">
+      Your order has been received. We are verifying your Instapay payment — this usually takes 1–2 hours. You'll be contacted once confirmed.
+    </p>
+    {% else %}
+    <div class="section-label" style="text-align:center; margin-bottom:12px;">Order Confirmed</div>
+    <h1 style="font-family:var(--font-serif); font-size:2.8rem; font-style:italic; color:var(--dark); margin-bottom:16px;">Thank You!</h1>
+    <p style="color:var(--text-light); font-size:0.95rem; line-height:1.7; margin-bottom:8px;">
+      Your order has been placed successfully. We'll contact you shortly to confirm delivery details.
+    </p>
+    {% endif %}
+
+    {% if order %}
+    <div class="order-details">
+      <div class="order-details__row">
+        <span class="order-details__label">Order Number</span>
+        <span class="order-details__value">{{ order.order_number }}</span>
+      </div>
+      <div class="order-details__row">
+        <span class="order-details__label">Name</span>
+        <span class="order-details__value">{{ order.customer_name }}</span>
+      </div>
+      <div class="order-details__row">
+        <span class="order-details__label">Phone</span>
+        <span class="order-details__value">{{ order.customer_phone }}</span>
+      </div>
+      <div class="order-details__row">
+        <span class="order-details__label">City</span>
+        <span class="order-details__value">{{ order.city }}</span>
+      </div>
+      <div class="order-details__row">
+        <span class="order-details__label">Payment</span>
+        <span class="order-details__value">{{ 'Cash on Delivery' if order.payment_method == 'cod' else 'Instapay' }}</span>
+      </div>
+      <div class="order-details__row">
+        <span class="order-details__label">Total</span>
+        <span class="order-details__value" style="font-family:var(--font-serif); font-size:1.2rem; color:var(--gold);">{{ order.total | int }} EGP</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:8px;">
+      <a href="{{ url_for('shop') }}" class="btn btn-primary">Continue Shopping</a>
+      <a href="{{ url_for('index') }}" class="btn btn-outline">Back to Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

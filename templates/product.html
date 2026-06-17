@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Candle K{% endblock %}
+{% block description %}{{ product.short_description }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="breadcrumb" style="padding:24px 0;">
+    <a href="{{ url_for('index') }}">Home</a>
+    <span>/</span>
+    <a href="{{ url_for('shop') }}">Shop</a>
+    {% if product.category_name %}
+    <span>/</span>
+    <a href="{{ url_for('shop', category=product.category_slug) }}">{{ product.category_name }}</a>
+    {% endif %}
+    <span>/</span>
+    <span>{{ product.name }}</span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="product-detail">
+
+    <!-- Gallery -->
+    <div>
+      <div class="gallery__main">
+        {% if images %}
+        <img src="{{ url_for('uploaded_product', filename=images[0].filename) }}" alt="{{ product.name }}" id="main-gallery-img">
+        {% else %}
+        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--cream);">
+          <svg width="80" height="110" viewBox="0 0 120 160" fill="none"><rect x="30" y="60" width="60" height="90" rx="4" fill="#B8935A" opacity="0.3"/><path d="M60 60 C53 44 38 38 44 24 C47 36 56 30 60 16 C64 30 73 36 76 24 C82 38 67 44 60 60Z" fill="#B8935A" opacity="0.5"/></svg>
+        </div>
+        {% endif %}
+      </div>
+      {% if images | length > 1 %}
+      <div class="gallery__thumbs">
+        {% for img in images %}
+        <div class="gallery__thumb {% if loop.first %}active{% endif %}">
+          <img src="{{ url_for('uploaded_product', filename=img.filename) }}" alt="{{ product.name }}">
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Info -->
+    <div class="product-info">
+      {% if product.category_name %}
+      <div class="section-label">{{ product.category_name }}</div>
+      {% endif %}
+      <h1 style="font-family:var(--font-serif); font-size:clamp(2rem, 4vw, 3rem); color:var(--dark); margin-bottom:4px;">{{ product.name }}</h1>
+
+      <div class="product-info__price">
+        <span class="product-info__price-current">{{ product.price | int }} EGP</span>
+        {% if product.original_price and product.original_price > product.price %}
+        <span class="product-info__price-original">{{ product.original_price | int }} EGP</span>
+        {% set save = ((product.original_price - product.price) / product.original_price * 100) | int %}
+        <span class="product-info__price-save">Save {{ save }}%</span>
+        {% endif %}
+      </div>
+
+      <p class="product-info__desc">{{ product.description or product.short_description }}</p>
+
+      <form class="add-to-cart-form" data-name="{{ product.name }}" action="/cart/add" method="POST">
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <div class="product-info__qty">
+          <span class="product-info__qty-label">Qty</span>
+          <div class="qty-input">
+            <button type="button" class="qty-minus">−</button>
+            <input type="number" name="qty" value="1" min="1" max="{{ product.stock }}">
+            <button type="button" class="qty-plus">+</button>
+          </div>
+          {% if product.stock > 0 %}
+          <span style="font-size:0.78rem; color:var(--text-light);">{{ product.stock }} in stock</span>
+          {% else %}
+          <span style="font-size:0.78rem; color:var(--red, #e53935);">Out of stock</span>
+          {% endif %}
+        </div>
+        <div class="product-info__add">
+          {% if product.stock > 0 %}
+          <button type="submit" class="btn btn-primary" style="flex:1;">Add to Cart</button>
+          {% else %}
+          <button type="button" class="btn btn-outline" disabled style="flex:1; opacity:0.5; cursor:not-allowed;">Out of Stock</button>
+          {% endif %}
+          <a href="{{ url_for('cart') }}" class="btn btn-outline">View Cart</a>
+        </div>
+      </form>
+
+      {% if product.stock == 0 %}
+      <!-- ── Wishlist / Back in Stock Notification ── -->
+      <div id="wishlist-box" style="margin-top:20px;padding:20px;background:var(--ivory-dark, #EEE9D8);border:1px solid var(--line-lt, #DDD8CE);border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="font-size:1.4rem;">🔔</span>
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--charcoal,#2C2A27);font-weight:600;">Notify me when back in stock</div>
+            <div style="font-size:.8rem;color:var(--charcoal-lt,#7A736A);margin-top:2px;">Enter your email and we'll send you a message the moment it's available again.</div>
+          </div>
+        </div>
+        <div id="wishlist-form-wrap">
+          <div style="display:flex;gap:10px;">
+            <input type="email" id="wishlist-email" placeholder="your@email.com"
+                   style="flex:1;padding:11px 14px;border:1px solid var(--line-lt,#DDD8CE);border-radius:4px;font-size:.9rem;color:var(--charcoal,#2C2A27);background:#fff;font-family:inherit;"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addToWishlist();}">
+            <button onclick="addToWishlist()" id="wishlist-btn"
+                    style="padding:11px 20px;background:var(--charcoal,#2C2A27);color:#F7F5EC;border:none;border-radius:4px;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:background .2s;"
+                    onmouseover="this.style.background='var(--pink-deep,#C97878)'"
+                    onmouseout="this.style.background='var(--charcoal,#2C2A27)'">
+              Notify Me
+            </button>
+          </div>
+          <div id="wishlist-msg" style="margin-top:10px;font-size:.83rem;display:none;"></div>
+        </div>
+      </div>
+
+      <script>
+      async function addToWishlist() {
+        const email = document.getElementById('wishlist-email').value.trim();
+        const btn   = document.getElementById('wishlist-btn');
+        const msg   = document.getElementById('wishlist-msg');
+        if (!email || !email.includes('@')) {
+          msg.style.display = 'block';
+          msg.style.color   = '#c0392b';
+          msg.textContent   = 'Please enter a valid email address.';
+          return;
+        }
+        btn.disabled    = true;
+        btn.textContent = '...';
+        try {
+          const fd = new FormData();
+          fd.append('product_id', '{{ product.id }}');
+          fd.append('email', email);
+          const res  = await fetch('/wishlist/add', { method: 'POST', body: fd });
+          const data = await res.json();
+          msg.style.display = 'block';
+          if (data.success) {
+            msg.style.color   = 'var(--leaf, #8FA882)';
+            msg.innerHTML     = '✓ ' + data.message;
+            document.getElementById('wishlist-form-wrap').innerHTML =
+              '<div style="text-align:center;padding:10px;color:var(--leaf,#8FA882);font-size:.9rem;font-weight:600;">✅ You\'re on the list! We\'ll email you as soon as it\'s back.</div>';
+          } else {
+            msg.style.color = '#c0392b';
+            msg.textContent = '✗ ' + (data.error || 'Something went wrong.');
+            btn.disabled    = false;
+            btn.textContent = 'Notify Me';
+          }
+        } catch(e) {
+          msg.style.display = 'block';
+          msg.style.color   = '#c0392b';
+          msg.textContent   = 'Network error. Please try again.';
+          btn.disabled      = false;
+          btn.textContent   = 'Notify Me';
+        }
+      }
+      </script>
+      {% endif %}
+
+      <div class="product-info__meta">
+        <div>Fragrance: <span>{{ product.name }}</span></div>
+        <div>Burn time: <span>40–50 hours</span></div>
+        <div>Material: <span>100% Natural Soy Wax</span></div>
+        {% if product.category_name %}<div>Category: <span>{{ product.category_name }}</span></div>{% endif %}
+      </div>
+
+      <!-- Shipping note -->
+      <div style="margin-top:24px; padding:16px 20px; background:var(--cream); border:1px solid var(--border); font-size:0.82rem; color:var(--text-light);">
+        🚚 Free shipping on orders over {{ site.free_shipping_threshold or '500' }} EGP &nbsp;|&nbsp;
+        📦 Delivered in 2–5 business days
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Related Products -->
+{% if related %}
+<section class="section section--alt">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:48px;">
+      <div class="section-label">You May Also Like</div>
+      <h2 class="section-title">Related Candles</h2>
+    </div>
+    <div class="products-grid" style="max-width:900px; margin:0 auto;">
+      {% for rp in related %}
+      <div class="product-card">
+        <a href="{{ url_for('product_detail', slug=rp.slug) }}">
+          <div class="product-card__image">
+            {% if rp.image %}
+            <img src="{{ url_for('uploaded_product', filename=rp.image) }}" alt="{{ rp.name }}" loading="lazy">
+            {% else %}
+            <div class="product-card__placeholder">
+              <svg width="48" height="64" viewBox="0 0 120 160" fill="none"><rect x="40" y="60" width="40" height="90" rx="2" fill="#B8935A" opacity="0.4"/><path d="M60 60 C55 45 45 40 50 28 C52 35 58 32 60 20 C62 32 68 35 70 28 C75 40 65 45 60 60Z" fill="#B8935A" opacity="0.5"/></svg>
+            </div>
+            {% endif %}
+          </div>
+        </a>
+        <div class="product-card__body">
+          <div class="product-card__name"><a href="{{ url_for('product_detail', slug=rp.slug) }}">{{ rp.name }}</a></div>
+          <div class="product-card__price">
+            <span class="product-card__price-current">{{ rp.price | int }} EGP</span>
+          </div>
+          <a href="{{ url_for('product_detail', slug=rp.slug) }}" class="btn btn-outline btn-sm" style="width:100%">View Product</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══ Customer Reviews ══════════════════════════════════ -->
+<section class="section" style="background:var(--cream);">
+  <div class="container" style="max-width:760px;">
+
+    <!-- Reviews header + summary -->
+    <div id="reviews-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:6px;">CUSTOMER REVIEWS</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--charcoal);margin:0;" id="reviews-title">What Customers Say</h2>
+      </div>
+      <button onclick="toggleReviewForm()" id="write-btn"
+              style="padding:11px 22px;background:var(--charcoal);color:var(--ivory);border:none;border-radius:4px;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;"
+              onmouseover="this.style.background='var(--pink-deep)'" onmouseout="this.style.background='var(--charcoal)'">
+        ✍️ Write a Review
+      </button>
+    </div>
+
+    <!-- Write review form (hidden by default) -->
+    <div id="review-form-wrap" style="display:none;background:#fff;border:1px solid var(--line-lt);border-radius:10px;padding:26px;margin-bottom:28px;">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--charcoal);margin:0 0 20px;">Your Review</h3>
+
+      <!-- Star rating selector -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:8px;">Rating *</div>
+        <div id="star-selector" style="display:flex;gap:6px;">
+          {% for i in range(1,6) %}
+          <span data-val="{{ i }}" onclick="setRating({{ i }})"
+                style="font-size:1.8rem;cursor:pointer;transition:transform .15s;color:#DDD8CE;"
+                onmouseover="hoverRating({{ i }})" onmouseout="resetStars()">★</span>
+          {% endfor %}
+        </div>
+        <input type="hidden" id="rv-rating" value="5">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:6px;">Your Name *</label>
+          <input type="text" id="rv-name" placeholder="Sara Ahmed"
+                 style="width:100%;padding:11px 14px;border:1px solid var(--line-lt);border-radius:6px;font-size:.9rem;color:var(--charcoal);background:var(--ivory);font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:6px;">Email (not shown)</label>
+          <input type="email" id="rv-email" placeholder="sara@example.com"
+                 style="width:100%;padding:11px 14px;border:1px solid var(--line-lt);border-radius:6px;font-size:.9rem;color:var(--charcoal);background:var(--ivory);font-family:inherit;box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:6px;">Review Title</label>
+        <input type="text" id="rv-title" placeholder="e.g. Absolutely love this candle!"
+               style="width:100%;padding:11px 14px;border:1px solid var(--line-lt);border-radius:6px;font-size:.9rem;color:var(--charcoal);background:var(--ivory);font-family:inherit;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:6px;">Your Review *</label>
+        <textarea id="rv-body" rows="4" placeholder="Tell us what you think about this candle…"
+                  style="width:100%;padding:11px 14px;border:1px solid var(--line-lt);border-radius:6px;font-size:.9rem;color:var(--charcoal);background:var(--ivory);font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+      <div id="rv-msg" style="margin-bottom:12px;font-size:.83rem;display:none;"></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="submitReview()" id="rv-submit-btn"
+                style="padding:12px 28px;background:var(--charcoal);color:var(--ivory);border:none;border-radius:4px;font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;"
+                onmouseover="this.style.background='var(--pink-deep)'" onmouseout="this.style.background='var(--charcoal)'">
+          Submit Review
+        </button>
+        <button onclick="toggleReviewForm()"
+                style="padding:12px 20px;background:transparent;color:var(--charcoal-lt);border:1px solid var(--line-lt);border-radius:4px;font-size:.8rem;cursor:pointer;">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- Existing reviews -->
+    <div id="reviews-list">
+      <div style="text-align:center;padding:40px;color:var(--charcoal-lt);">
+        <div style="font-size:2rem;margin-bottom:10px;">💬</div>
+        <div>Loading reviews…</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+// ── Star rating ───────────────────────────────────────
+let currentRating = 5;
+function setRating(n){
+  currentRating = n;
+  document.getElementById('rv-rating').value = n;
+  resetStars();
+}
+function hoverRating(n){
+  document.querySelectorAll('#star-selector span').forEach((s,i)=>{
+    s.style.color = i < n ? '#C97878' : '#DDD8CE';
+    s.style.transform = i < n ? 'scale(1.15)' : 'scale(1)';
+  });
+}
+function resetStars(){
+  document.querySelectorAll('#star-selector span').forEach((s,i)=>{
+    s.style.color = i < currentRating ? '#C97878' : '#DDD8CE';
+    s.style.transform = 'scale(1)';
+  });
+}
+// Set default 5 stars
+setRating(5);
+
+function toggleReviewForm(){
+  const wrap = document.getElementById('review-form-wrap');
+  wrap.style.display = wrap.style.display==='none' ? 'block' : 'none';
+  if(wrap.style.display==='block') wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+async function submitReview(){
+  const name  = document.getElementById('rv-name').value.trim();
+  const body  = document.getElementById('rv-body').value.trim();
+  const email = document.getElementById('rv-email').value.trim();
+  const title = document.getElementById('rv-title').value.trim();
+  const msg   = document.getElementById('rv-msg');
+  const btn   = document.getElementById('rv-submit-btn');
+  if(!name || !body){
+    msg.style.display='block'; msg.style.color='#c0392b';
+    msg.textContent='Please fill in your name and review.'; return;
+  }
+  btn.disabled=true; btn.textContent='Submitting…';
+  try{
+    const fd=new FormData();
+    fd.append('name',name); fd.append('body',body);
+    fd.append('email',email); fd.append('title',title);
+    fd.append('rating',currentRating);
+    const res  = await fetch('/product/{{ product.slug }}/review',{method:'POST',body:fd});
+    const data = await res.json();
+    msg.style.display='block';
+    if(data.success){
+      msg.style.color='#155724'; msg.textContent='✓ '+data.message;
+      document.getElementById('rv-name').value='';
+      document.getElementById('rv-body').value='';
+      document.getElementById('rv-email').value='';
+      document.getElementById('rv-title').value='';
+      setRating(5);
+      btn.textContent='✓ Submitted!';
+    } else {
+      msg.style.color='#c0392b'; msg.textContent='✗ '+(data.error||'Error. Try again.');
+      btn.disabled=false; btn.textContent='Submit Review';
+    }
+  } catch(e){
+    msg.style.display='block'; msg.style.color='#c0392b'; msg.textContent='Error. Try again.';
+    btn.disabled=false; btn.textContent='Submit Review';
+  }
+}
+
+// ── Load existing reviews ─────────────────────────────
+async function loadReviews(){
+  try{
+    const res  = await fetch('/product/{{ product.slug }}/reviews');
+    const data = await res.json();
+    const list = document.getElementById('reviews-list');
+    const title= document.getElementById('reviews-title');
+    if(!data.reviews || data.reviews.length===0){
+      list.innerHTML='<div style="text-align:center;padding:40px;color:var(--charcoal-lt);"><div style="font-size:2rem;margin-bottom:10px;">🕯️</div><div style="font-size:.95rem;">No reviews yet — be the first to share your thoughts!</div></div>';
+      return;
+    }
+    title.textContent = data.count + ' Review' + (data.count!==1?'s':'') + (data.average?' · ★ '+data.average:'');
+    list.innerHTML = data.reviews.map(r=>`
+      <div style="background:#fff;border:1px solid var(--line-lt);border-radius:8px;padding:20px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-weight:600;color:var(--charcoal);font-size:.9rem;">${r.customer_name}</div>
+            <div style="color:#C97878;font-size:.95rem;margin-top:2px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+          </div>
+          <div style="font-size:.75rem;color:var(--charcoal-lt);">${(r.created_at||'').slice(0,10)}</div>
+        </div>
+        ${r.title?`<div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--charcoal);margin-bottom:6px;">${r.title}</div>`:''}
+        <div style="font-size:.88rem;color:var(--charcoal-lt);line-height:1.7;">${r.body}</div>
+      </div>`).join('');
+  } catch(e){
+    document.getElementById('reviews-list').innerHTML='';
+  }
+}
+loadReviews();
+</script>
+{% endblock %}
+

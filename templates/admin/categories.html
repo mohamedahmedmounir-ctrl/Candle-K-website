@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% block title %}Categories — Admin{% endblock %}
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start;">
+
+  <!-- Categories List -->
+  <div class="admin-card">
+    <div class="admin-card__header"><div class="admin-card__title">All Categories</div></div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Slug</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr>
+          <td style="color:var(--cream); font-weight:500;">{{ cat.name }}</td>
+          <td style="color:var(--text-dim); font-size:0.8rem;">/{{ cat.slug }}</td>
+          <td style="color:var(--text); font-size:0.83rem;">{{ cat.description or '—' }}</td>
+          <td>
+            <form action="{{ url_for('admin_categories') }}" method="POST">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="id" value="{{ cat.id }}">
+              <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm" data-confirm="Delete category '{{ cat.name }}'?">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Category -->
+  <div class="admin-card" style="position:sticky; top:80px;">
+    <div class="admin-card__header"><div class="admin-card__title">Add Category</div></div>
+    <div class="admin-card__body">
+      <form action="{{ url_for('admin_categories') }}" method="POST">
+        <input type="hidden" name="action" value="add">
+        <div class="admin-form-group">
+          <label>Category Name</label>
+          <input type="text" name="name" class="admin-input" required placeholder="e.g. Scented Candles">
+        </div>
+        <div class="admin-form-group">
+          <label>Description</label>
+          <textarea name="description" class="admin-textarea" style="min-height:80px;" placeholder="Short category description…"></textarea>
+        </div>
+        <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; justify-content:center;">Add Category</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

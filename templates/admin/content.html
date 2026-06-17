@@ -1,0 +1,317 @@
+{% extends "admin/base.html" %}
+{% block title %}Site Content — Admin{% endblock %}
+{% block page_title %}Site Content{% endblock %}
+
+{% block content %}
+<form method="POST">
+  <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
+    <button type="submit" class="admin-btn admin-btn-primary">Save All Changes</button>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="content-section">
+    <div class="content-section__header">🏠 Hero Section</div>
+    <div class="content-section__body">
+      <div class="form-grid-2">
+        <div class="admin-form-group">
+          <label>Hero Title</label>
+          <input type="text" name="hero_title" class="admin-input" value="{{ content.get('hero_title', '') }}">
+        </div>
+        <div class="admin-form-group">
+          <label>Hero CTA Button Text</label>
+          <input type="text" name="hero_cta" class="admin-input" value="{{ content.get('hero_cta', '') }}">
+        </div>
+      </div>
+      <div class="admin-form-group">
+        <label>Hero Subtitle</label>
+        <textarea name="hero_subtitle" class="admin-textarea" style="min-height:80px;">{{ content.get('hero_subtitle', '') }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Section -->
+  <div class="content-section">
+    <div class="content-section__header">📖 About Section</div>
+    <div class="content-section__body">
+      <div class="form-grid-2">
+        <div class="admin-form-group">
+          <label>About Title</label>
+          <input type="text" name="about_title" class="admin-input" value="{{ content.get('about_title', '') }}">
+        </div>
+        <div class="admin-form-group">
+          <label>About Tagline</label>
+          <input type="text" name="about_tagline" class="admin-input" value="{{ content.get('about_tagline', '') }}">
+        </div>
+      </div>
+      <div class="admin-form-group">
+        <label>About Text</label>
+        <textarea name="about_text" class="admin-textarea" style="min-height:120px;">{{ content.get('about_text', '') }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Promotions -->
+  <div class="content-section">
+    <div class="content-section__header">🎉 Promotion Banner</div>
+    <div class="content-section__body">
+      <div class="form-grid-2">
+        <div class="admin-form-group">
+          <label>Promo Title</label>
+          <input type="text" name="promo_title" class="admin-input" value="{{ content.get('promo_title', '') }}">
+        </div>
+        <div class="admin-form-group">
+          <label>Promo Subtitle</label>
+          <input type="text" name="promo_subtitle" class="admin-input" value="{{ content.get('promo_subtitle', '') }}">
+        </div>
+      </div>
+      <div class="admin-form-group">
+        <div class="admin-checkbox">
+          <input type="checkbox" id="promo_active" name="promo_active" value="true" {% if content.get('promo_active') == 'true' %}checked{% endif %}>
+          <label for="promo_active">Show promotion banner on website</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Info -->
+  <div class="content-section">
+    <div class="content-section__header">📞 Contact Information</div>
+    <div class="content-section__body">
+      <div class="form-grid-3">
+        <div class="admin-form-group">
+          <label>Email</label>
+          <input type="text" name="contact_email" class="admin-input" value="{{ content.get('contact_email', '') }}">
+        </div>
+        <div class="admin-form-group">
+          <label>Phone</label>
+          <input type="text" name="contact_phone" class="admin-input" value="{{ content.get('contact_phone', '') }}">
+        </div>
+        <div class="admin-form-group">
+          <label>Instagram Handle</label>
+          <input type="text" name="contact_instagram" class="admin-input" value="{{ content.get('contact_instagram', '') }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instapay -->
+  <div class="content-section">
+    <div class="content-section__header">📲 Instapay Settings</div>
+    <div class="content-section__body">
+      <div class="form-grid-2">
+        <div class="admin-form-group">
+          <label>Instapay Number</label>
+          <input type="text" name="instapay_number" class="admin-input" value="{{ content.get('instapay_number', '') }}">
+        </div>
+        <div class="admin-form-group">
+          <label>Account Name</label>
+          <input type="text" name="instapay_name" class="admin-input" value="{{ content.get('instapay_name', '') }}">
+        </div>
+      </div>
+      <div class="admin-form-group">
+        <label>Payment Instructions</label>
+        <textarea name="instapay_instructions" class="admin-textarea" style="min-height:80px;">{{ content.get('instapay_instructions', '') }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipping -->
+  <div class="content-section">
+    <div class="content-section__header">🚚 Shipping Settings</div>
+    <div class="content-section__body">
+      <div class="form-grid-2">
+        <div class="admin-form-group">
+          <label>Shipping Fee (EGP)</label>
+          <input type="number" name="shipping_fee" class="admin-input" value="{{ content.get('shipping_fee', '50') }}" min="0">
+        </div>
+        <div class="admin-form-group">
+          <label>Free Shipping Threshold (EGP)</label>
+          <input type="number" name="free_shipping_threshold" class="admin-input" value="{{ content.get('free_shipping_threshold', '500') }}" min="0">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="content-section">
+    <div class="content-section__header">🦶 Footer</div>
+    <div class="content-section__body">
+      <div class="admin-form-group">
+        <label>Footer Tagline</label>
+        <textarea name="footer_text" class="admin-textarea" style="min-height:80px;">{{ content.get('footer_text', '') }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Settings -->
+  <div class="content-section">
+    <div class="content-section__header">📧 Email Settings (Automatic Customer Emails)</div>
+    <div class="content-section__body">
+      <div style="background:#FFF3CD;border:1px solid #FFEAA0;border-radius:6px;padding:14px;margin-bottom:20px;font-size:.85rem;color:#856404;">
+        <strong>How to set up Gmail:</strong> Enable 2-Step Verification on your Google account, then go to
+        Google Account → Security → App Passwords → create a password for "Mail". Use that 16-character password below.
+        Set <strong>email_enabled = true</strong> to activate.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="admin-form-group" style="margin:0;">
+          <label>SMTP Host</label>
+          <input type="text" name="email_host" class="admin-input" value="{{ content.get('email_host','smtp.gmail.com') }}" placeholder="smtp.gmail.com">
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>SMTP Port</label>
+          <input type="number" name="email_port" class="admin-input" value="{{ content.get('email_port','587') }}" placeholder="587">
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>Email Address (Gmail)</label>
+          <input type="email" name="email_user" class="admin-input" value="{{ content.get('email_user','') }}" placeholder="yourstore@gmail.com">
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>App Password (16 chars)</label>
+          <input type="password" name="email_password" class="admin-input" value="{{ content.get('email_password','') }}" placeholder="xxxx xxxx xxxx xxxx">
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>Store Name (shown in emails)</label>
+          <input type="text" name="store_name" class="admin-input" value="{{ content.get('store_name','Candle K') }}">
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>Store URL (for tracking links)</label>
+          <input type="text" name="store_url" class="admin-input" value="{{ content.get('store_url','http://localhost:5000') }}" placeholder="https://yourdomain.com">
+        </div>
+      </div>
+      <div class="admin-form-group" style="margin-top:16px;">
+        <label>Enable Automatic Emails</label>
+        <select name="email_enabled" class="admin-select">
+          <option value="false" {% if content.get('email_enabled','false') != 'true' %}selected{% endif %}>❌ Disabled</option>
+          <option value="true" {% if content.get('email_enabled','false') == 'true' %}selected{% endif %}>✅ Enabled</option>
+        </select>
+        <small style="color:#999;display:block;margin-top:6px;">When enabled, customers receive emails on order placement and every status update.</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Order Pricing -->
+  <div class="content-section">
+    <div class="content-section__header">✏️ Custom Candle Pricing (EGP)</div>
+    <div class="content-section__body">
+      <p style="font-size:.83rem;color:#999;margin-bottom:18px;">Set the base price for each shape and extra cost for each size. The total is calculated automatically when customers design their candle.</p>
+
+      <div style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:10px;font-weight:600;">Base Price by Shape</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+        {% for key, label in [('pillar','Pillar'),('jar','Jar'),('votive','Votive'),('taper','Taper'),('sphere','Sphere'),('custom','Custom Design')] %}
+        <div class="admin-form-group" style="margin:0;">
+          <label>{{ label }}</label>
+          <div style="position:relative;">
+            <input type="number" name="custom_price_shape_{{ key }}" class="admin-input" value="{{ content.get('custom_price_shape_'~key, '0') }}" min="0" step="10">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.8rem;color:#999;pointer-events:none;">EGP</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:10px;font-weight:600;">Extra Cost by Size (added on top of shape price)</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+        {% for key, label in [('small','Small (~100g)'),('medium','Medium (~200g)'),('large','Large (~350g)'),('extra_large','Extra Large (~500g)')] %}
+        <div class="admin-form-group" style="margin:0;">
+          <label>{{ label }}</label>
+          <div style="position:relative;">
+            <input type="number" name="custom_price_size_{{ key }}" class="admin-input" value="{{ content.get('custom_price_size_'~key, '0') }}" min="0" step="10">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.8rem;color:#999;pointer-events:none;">EGP</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:10px;font-weight:600;">Extra Charges</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+        <div class="admin-form-group" style="margin:0;">
+          <label>Custom Scent Surcharge</label>
+          <div style="position:relative;">
+            <input type="number" name="custom_price_scent_surcharge" class="admin-input" value="{{ content.get('custom_price_scent_surcharge','50') }}" min="0">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.8rem;color:#999;pointer-events:none;">EGP</span>
+          </div>
+          <small style="color:#999;display:block;margin-top:4px;">Added when customer chooses "Custom Blend"</small>
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>Engraved Message Surcharge</label>
+          <div style="position:relative;">
+            <input type="number" name="custom_price_message_surcharge" class="admin-input" value="{{ content.get('custom_price_message_surcharge','30') }}" min="0">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.8rem;color:#999;pointer-events:none;">EGP</span>
+          </div>
+          <small style="color:#999;display:block;margin-top:4px;">Added when customer types a message on the candle</small>
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>Custom Order Shipping</label>
+          <div style="position:relative;">
+            <input type="number" name="custom_price_shipping" class="admin-input" value="{{ content.get('custom_price_shipping','60') }}" min="0">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.8rem;color:#999;pointer-events:none;">EGP</span>
+          </div>
+          <small style="color:#999;display:block;margin-top:4px;">Fixed shipping fee for custom orders</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Delivery Settings -->
+  <div class="content-section">
+    <div class="content-section__header">🚚 Delivery Settings</div>
+    <div class="content-section__body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="admin-form-group" style="margin:0;">
+          <label>Minimum Delivery Days</label>
+          <input type="number" name="delivery_days_min" class="admin-input" value="{{ content.get('delivery_days_min','2') }}" min="1" max="30">
+          <small style="color:#999;display:block;margin-top:5px;">Shown as estimated delivery at checkout.</small>
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>Maximum Delivery Days</label>
+          <input type="number" name="delivery_days_max" class="admin-input" value="{{ content.get('delivery_days_max','5') }}" min="1" max="30">
+          <small style="color:#999;display:block;margin-top:5px;">Fridays are skipped (Egyptian business days).</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Order Settings -->
+  <div class="content-section">
+    <div class="content-section__header">✏️ Custom Candle Order Settings</div>
+    <div class="content-section__body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="admin-form-group" style="margin:0;">
+          <label>Enable Custom Orders Page</label>
+          <select name="custom_order_enabled" class="admin-select">
+            <option value="true"  {% if content.get('custom_order_enabled','true') == 'true' %}selected{% endif %}>✅ Enabled</option>
+            <option value="false" {% if content.get('custom_order_enabled','true') != 'true' %}selected{% endif %}>❌ Disabled</option>
+          </select>
+        </div>
+        <div class="admin-form-group" style="margin:0;">
+          <label>Minimum Custom Order Price (EGP)</label>
+          <input type="number" name="custom_order_min_price" class="admin-input" value="{{ content.get('custom_order_min_price','300') }}">
+        </div>
+      </div>
+      <div class="admin-form-group" style="margin-top:16px;">
+        <label>Note shown on Custom Order page</label>
+        <textarea name="custom_order_note" class="admin-textarea" style="min-height:80px;">{{ content.get('custom_order_note','Custom candles are handmade to order and take 5-7 business days.') }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Settings -->
+  <div class="content-section">
+    <div class="content-section__header">📦 Inventory Alert Settings</div>
+    <div class="content-section__body">
+      <div class="admin-form-group">
+        <label>Low Stock Alert Threshold</label>
+        <input type="number" name="low_stock_threshold" class="admin-input" style="max-width:180px;" value="{{ content.get('low_stock_threshold','5') }}" min="1">
+        <small style="color:#999;display:block;margin-top:5px;">
+          Products with stock at or below this number will show a warning on the dashboard.
+          Admin will also receive an email alert once per day per product.
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+    <button type="submit" class="admin-btn admin-btn-primary" style="padding:14px 40px;">Save All Changes</button>
+  </div>
+</form>
+{% endblock %}

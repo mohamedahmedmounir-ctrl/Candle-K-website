@@ -1,0 +1,234 @@
+{% extends "admin/base.html" %}
+{% block title %}Custom Orders{% endblock %}
+{% block page_title %}Custom Orders{% endblock %}
+
+{% block content %}
+<style>
+.co-status{display:inline-block;padding:4px 10px;border-radius:12px;font-size:.73rem;font-weight:700;letter-spacing:.04em;}
+.co-pending{background:#FEF3CD;color:#92400E;}
+.co-quoted{background:#DBEAFE;color:#1E40AF;}
+.co-confirmed{background:#D1FAE5;color:#065F46;}
+.co-in_production{background:#EDE9FE;color:#5B21B6;}
+.co-completed{background:#D1FAE5;color:#065F46;}
+.co-cancelled{background:#FEE2E2;color:#991B1B;}
+.detail-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:3px;}
+.detail-val{font-size:.9rem;color:#2C2A27;font-weight:500;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:#fff;border-radius:12px;width:540px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25);}
+.modal-header{padding:20px 24px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;}
+.f-group{margin-bottom:16px;}
+.f-group label{display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#7A736A;margin-bottom:6px;}
+.f-group input,.f-group select,.f-group textarea{width:100%;padding:10px 12px;border:1px solid #DDD8CE;border-radius:6px;font-size:.9rem;color:#2C2A27;background:#F7F5EC;font-family:inherit;box-sizing:border-box;}
+.f-group textarea{min-height:80px;resize:vertical;}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.email-badge{font-size:.7rem;padding:2px 8px;border-radius:10px;font-weight:600;}
+.email-yes{background:#D1FAE5;color:#065F46;}
+.email-no{background:#F3F4F6;color:#6B7280;}
+</style>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="admin-alert admin-alert-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<!-- Stats row -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
+  {% for label, val, color in [
+    ('Total Requests', orders|length, '#2C2A27'),
+    ('Pending Quote',  orders|selectattr('status','equalto','pending')|list|length, '#C8A45A'),
+    ('In Production',  orders|selectattr('status','equalto','in_production')|list|length, '#7A8FBF'),
+    ('Completed',      orders|selectattr('status','equalto','completed')|list|length, '#7FA882'),
+  ] %}
+  <div style="background:#fff;border:1px solid #E8E2D4;border-radius:8px;padding:16px 18px;text-align:center;">
+    <div style="font-size:1.6rem;font-weight:700;color:{{ color }};">{{ val }}</div>
+    <div style="font-size:.75rem;color:#999;margin-top:3px;">{{ label }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="admin-card">
+  <div class="admin-card__header">
+    <div class="admin-card__title">✏️ All Custom Candle Requests</div>
+  </div>
+
+  {% if orders %}
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Customer</th>
+          <th>Candle Details</th>
+          <th>Qty</th>
+          <th>Quoted Price</th>
+          <th>Status</th>
+          <th>Customer Email</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for o in orders %}
+      <tr>
+        <td style="font-family:monospace;font-size:.8rem;font-weight:700;color:#C97878;">{{ o.order_number }}</td>
+        <td>
+          <div style="font-weight:600;font-size:.87rem;">{{ o.customer_name }}</div>
+          <div style="font-size:.75rem;color:#999;">{{ o.customer_phone }}</div>
+          {% if o.customer_email %}<div style="font-size:.73rem;color:#999;">{{ o.customer_email }}</div>{% endif %}
+        </td>
+        <td style="font-size:.82rem;max-width:190px;">
+          <div><span style="color:#999;">Shape:</span> <strong>{{ o.candle_shape }}</strong></div>
+          <div><span style="color:#999;">Size:</span> {{ o.candle_size }}</div>
+          <div><span style="color:#999;">Scent:</span> {{ o.scent }}</div>
+          {% if o.color %}<div><span style="color:#999;">Color:</span> {{ o.color }}</div>{% endif %}
+          {% if o.message_on_candle %}<div style="margin-top:4px;font-style:italic;color:#C97878;">"{{ o.message_on_candle }}"</div>{% endif %}
+        </td>
+        <td style="text-align:center;font-weight:700;">{{ o.quantity }}</td>
+        <td>
+          {% if o.quoted_price %}
+          <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:1.1rem;font-weight:700;color:#2C2A27;">{{ o.quoted_price|int }} EGP</span>
+          {% else %}
+          <span style="color:#999;font-size:.82rem;">Not quoted yet</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="co-status co-{{ o.status }}">
+            {% if o.status=='pending' %}⏳ Pending
+            {% elif o.status=='quoted' %}💰 Quoted
+            {% elif o.status=='confirmed' %}✅ Confirmed
+            {% elif o.status=='in_production' %}🔥 In Production
+            {% elif o.status=='completed' %}🎉 Completed
+            {% elif o.status=='cancelled' %}❌ Cancelled
+            {% else %}{{ o.status|title }}{% endif %}
+          </span>
+        </td>
+        <td>
+          {% if o.customer_email %}
+          <span class="email-badge email-yes">✓ Has email</span>
+          {% else %}
+          <span class="email-badge email-no">No email</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.78rem;color:#999;">{{ o.created_at[:10] }}</td>
+        <td>
+          <button onclick="openModal({{ o.id }})" class="admin-btn admin-btn-primary admin-btn-sm">Edit & Quote</button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div style="text-align:center;padding:60px;color:#999;">
+    <div style="font-size:3rem;margin-bottom:16px;">✏️</div>
+    <div style="font-size:1rem;color:#2C2A27;margin-bottom:8px;">No custom orders yet</div>
+    <div style="font-size:.85rem;">When customers submit custom candle requests they will appear here.</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Edit Modals (one per order) -->
+{% for o in orders %}
+<div id="modal-{{ o.id }}" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;color:#2C2A27;">{{ o.order_number }}</div>
+        <div style="font-size:.8rem;color:#999;margin-top:2px;">{{ o.customer_name }} · {{ o.customer_phone }}</div>
+      </div>
+      <button onclick="closeModal({{ o.id }})" style="background:none;border:none;font-size:1.6rem;cursor:pointer;color:#7A736A;line-height:1;padding:0;">×</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Customer's candle details (read-only) -->
+      <div style="background:#F7F5EC;border-radius:8px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#7A736A;margin-bottom:12px;font-weight:600;">Customer's Request</div>
+        <div class="f-grid" style="gap:10px;">
+          <div><div class="detail-label">Shape</div><div class="detail-val">{{ o.candle_shape }}</div></div>
+          <div><div class="detail-label">Size</div><div class="detail-val">{{ o.candle_size }}</div></div>
+          <div><div class="detail-label">Scent</div><div class="detail-val">{{ o.scent }}</div></div>
+          <div><div class="detail-label">Intensity</div><div class="detail-val">{{ o.scent_intensity|title }}</div></div>
+          {% if o.color %}<div><div class="detail-label">Color</div><div class="detail-val">{{ o.color }}</div></div>{% endif %}
+          <div><div class="detail-label">Quantity</div><div class="detail-val">{{ o.quantity }}</div></div>
+          {% if o.budget %}<div><div class="detail-label">Budget</div><div class="detail-val">{{ o.budget }}</div></div>{% endif %}
+        </div>
+        {% if o.message_on_candle %}
+        <div style="margin-top:10px;"><div class="detail-label">Message on candle</div><div class="detail-val" style="font-style:italic;">"{{ o.message_on_candle }}"</div></div>
+        {% endif %}
+        {% if o.notes %}
+        <div style="margin-top:10px;"><div class="detail-label">Customer notes</div><div class="detail-val">{{ o.notes }}</div></div>
+        {% endif %}
+      </div>
+
+      <!-- Admin form -->
+      <form method="POST" id="form-{{ o.id }}">
+        <input type="hidden" name="id" value="{{ o.id }}">
+        <div class="f-grid">
+          <div class="f-group">
+            <label>Update Status</label>
+            <select name="status">
+              {% for s, label in [
+                ('pending','⏳ Pending Review'),
+                ('quoted','💰 Quote Sent'),
+                ('confirmed','✅ Confirmed'),
+                ('in_production','🔥 In Production'),
+                ('completed','🎉 Completed'),
+                ('cancelled','❌ Cancelled'),
+              ] %}
+              <option value="{{ s }}" {% if o.status==s %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="f-group">
+            <label>Quoted Price (EGP)</label>
+            <input type="number" name="quoted_price" value="{{ o.quoted_price|int if o.quoted_price else '' }}" placeholder="e.g. 450" min="0" step="10">
+          </div>
+        </div>
+        <div class="f-group">
+          <label>Message to Customer (included in email)</label>
+          <textarea name="admin_notes" placeholder="e.g. Your custom candle will be ready in 5 business days. We will call you to arrange delivery.">{{ o.admin_notes or '' }}</textarea>
+        </div>
+
+        {% if o.customer_email %}
+        <div style="padding:10px 14px;background:#D1FAE5;border-radius:6px;font-size:.82rem;color:#065F46;">
+          ✉️ Customer will automatically receive an email with this update at <strong>{{ o.customer_email }}</strong>
+        </div>
+        {% else %}
+        <div style="padding:10px 14px;background:#FEF3CD;border-radius:6px;font-size:.82rem;color:#92400E;">
+          ⚠️ No email on file — update saved but customer cannot be notified automatically
+        </div>
+        {% endif %}
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button onclick="closeModal({{ o.id }})" class="admin-btn admin-btn-secondary">Cancel</button>
+      <button onclick="document.getElementById('form-{{ o.id }}').submit()" class="admin-btn admin-btn-primary">
+        Save & Notify Customer
+      </button>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+function openModal(id){
+  document.getElementById('modal-'+id).style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeModal(id){
+  document.getElementById('modal-'+id).style.display='none';
+  document.body.style.overflow='';
+}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click', function(e){
+    if(e.target===this) closeModal(this.id.replace('modal-',''));
+  });
+});
+</script>
+{% endblock %}

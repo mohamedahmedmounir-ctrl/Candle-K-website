@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ═══ HERO ═══════════════════════════════════════ -->
+<section class="hero">
+  <div class="container" style="display:contents;">
+
+    <!-- Left: copy -->
+    <div class="hero__content container">
+      <div class="hero__eyebrow">Handcrafted in Egypt</div>
+      <h1 class="hero__title">
+        {{ site.hero_title.rsplit(' ', 2)[0] if site.hero_title else 'Illuminate' }}<br>
+        <em>{{ site.hero_title.rsplit(' ', 2)[1:] | join(' ') if site.hero_title else 'Your World' }}</em>
+      </h1>
+      <p class="hero__text">{{ site.hero_subtitle }}</p>
+      <div class="hero__actions">
+        <a href="{{ url_for('shop') }}" class="btn btn-primary btn-lg">{{ site.hero_cta or 'Shop Now' }}</a>
+        <a href="#about" class="btn btn-pink-outline btn-lg">Our Story</a>
+      </div>
+
+      <!-- Trust badges -->
+      <div style="display:flex; gap:28px; margin-top:52px; flex-wrap:wrap;">
+        {% for badge in [('🌿','Natural Soy Wax'),('✋','Hand Poured'),('🇪🇬','Made in Egypt')] %}
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.1rem;">{{ badge[0] }}</span>
+          <span style="font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--charcoal-lt); font-weight:500;">{{ badge[1] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right: logo display panel -->
+    <div class="hero__visual">
+      <div class="hero__logo-display">
+        <img
+          src="{{ url_for('static', filename='images/logo.jpeg') }}"
+          alt="Candle K — Pure light pure comfort"
+        >
+        <p style="font-family:var(--font-script); font-size:1.2rem; color:var(--charcoal-lt); margin-top:4px; text-align:center;">
+          Pure light, pure comfort
+        </p>
+      </div>
+
+      <div class="hero__badge">
+        <div class="hero__badge-number">100%</div>
+        <div class="hero__badge-text">Natural Soy Wax</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ FEATURED PRODUCTS ═══════════════════════════ -->
+{% if featured %}
+<section class="section">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:52px;">
+      <div class="section-label">Curated Collection</div>
+      <h2 class="section-title">Featured Candles</h2>
+      <p style="font-family:var(--font-script); font-size:1.1rem; color:var(--charcoal-lt); margin-top:4px;">
+        Each one made with love and intention
+      </p>
+    </div>
+
+    <div class="products-grid">
+      {% for product in featured %}
+      <div class="product-card stat-animate">
+        <a href="{{ url_for('product_detail', slug=product.slug) }}">
+          <div class="product-card__image">
+            {% if product.image %}
+            <img src="{{ url_for('uploaded_product', filename=product.image) }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+            <div class="product-card__placeholder">
+              <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Candle K" style="width:80px; height:80px; object-fit:contain; opacity:0.35;">
+            </div>
+            {% endif %}
+            {% if product.original_price and product.original_price > product.price %}
+            <div class="product-card__badge product-card__badge--sale">Sale</div>
+            {% elif product.is_bestseller %}
+            <div class="product-card__badge product-card__badge--bestseller">Bestseller</div>
+            {% endif %}
+          </div>
+        </a>
+        <div class="product-card__body">
+          <div class="product-card__name">
+            <a href="{{ url_for('product_detail', slug=product.slug) }}">{{ product.name }}</a>
+          </div>
+          <p class="product-card__desc">{{ product.short_description }}</p>
+          <div class="product-card__price">
+            <span class="product-card__price-current">{{ product.price | int }} EGP</span>
+            {% if product.original_price and product.original_price > product.price %}
+            <span class="product-card__price-original">{{ product.original_price | int }} EGP</span>
+            {% endif %}
+          </div>
+          <div class="product-card__actions">
+            <form class="add-to-cart-form" data-name="{{ product.name }}" action="/cart/add" method="POST" style="flex:1;">
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <input type="hidden" name="qty" value="1">
+              <button type="submit" class="btn btn-primary btn-sm" style="width:100%;">Add to Cart</button>
+            </form>
+            <a href="{{ url_for('product_detail', slug=product.slug) }}" class="btn btn-outline btn-sm">View</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="text-align:center; margin-top:48px;">
+      <a href="{{ url_for('shop') }}" class="btn btn-outline btn-lg">View All Candles</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ ABOUT ══════════════════════════════════════ -->
+<section id="about" class="section section--alt">
+  <div class="container">
+    <div class="about">
+      <div class="about__visual">
+        <div class="about__placeholder">
+          <img
+            src="{{ url_for('static', filename='images/logo.jpeg') }}"
+            alt="Candle K"
+            class="about__logo-watermark"
+          >
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label no-lines" style="justify-content:flex-start; margin-bottom:10px;">Our Story</div>
+        <h2 class="section-title">{{ site.about_title }}</h2>
+
+        <p style="font-size:0.94rem; line-height:1.88; color:var(--charcoal-lt); font-weight:300; margin-bottom:24px;">
+          {{ site.about_text }}
+        </p>
+
+        <div class="about__features">
+          <div class="about__feature">
+            <div class="about__feature-num">100%</div>
+            <div class="about__feature-label">Natural Wax</div>
+          </div>
+          <div class="about__feature">
+            <div class="about__feature-num">50+</div>
+            <div class="about__feature-label">Fragrances</div>
+          </div>
+          <div class="about__feature">
+            <div class="about__feature-num">Hand</div>
+            <div class="about__feature-label">Poured</div>
+          </div>
+        </div>
+
+        <div class="about__tagline">{{ site.about_tagline }}</div>
+
+        <div style="margin-top:28px;">
+          <a href="{{ url_for('shop') }}" class="btn btn-primary">Shop the Collection</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BESTSELLERS ══════════════════════════════ -->
+{% if bestsellers %}
+<section class="section">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:52px;">
+      <div class="section-label">Community Favorites</div>
+      <h2 class="section-title">Bestsellers</h2>
+    </div>
+    <div class="products-grid">
+      {% for product in bestsellers %}
+      <div class="product-card stat-animate">
+        <a href="{{ url_for('product_detail', slug=product.slug) }}">
+          <div class="product-card__image">
+            {% if product.image %}
+            <img src="{{ url_for('uploaded_product', filename=product.image) }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+            <div class="product-card__placeholder">
+              <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Candle K" style="width:80px; height:80px; object-fit:contain; opacity:0.35;">
+            </div>
+            {% endif %}
+            <div class="product-card__badge product-card__badge--bestseller">Bestseller</div>
+          </div>
+        </a>
+        <div class="product-card__body">
+          <div class="product-card__name">
+            <a href="{{ url_for('product_detail', slug=product.slug) }}">{{ product.name }}</a>
+          </div>
+          <p class="product-card__desc">{{ product.short_description }}</p>
+          <div class="product-card__price">
+            <span class="product-card__price-current">{{ product.price | int }} EGP</span>
+            {% if product.original_price %}<span class="product-card__price-original">{{ product.original_price | int }} EGP</span>{% endif %}
+          </div>
+          <form class="add-to-cart-form" data-name="{{ product.name }}" action="/cart/add" method="POST">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <input type="hidden" name="qty" value="1">
+            <button type="submit" class="btn btn-primary btn-sm" style="width:100%;">Add to Cart</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ TESTIMONIALS ════════════════════════════ -->
+{% if testimonials %}
+<section class="testimonials">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:16px;">
+      <div class="section-label">What People Say</div>
+      <h2 class="section-title">Loved by Our Community</h2>
+    </div>
+    <div class="testimonials-grid">
+      {% for t in testimonials %}
+      <div class="testimonial-card stat-animate">
+        <div class="testimonial-card__quote">"</div>
+        <div class="testimonial-card__stars">{% for i in range(t.rating) %}★{% endfor %}</div>
+        <p class="testimonial-card__text">{{ t.text }}</p>
+        <div class="testimonial-card__name">— {{ t.name }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ GIFT PROMO STRIP ══════════════════════════ -->
+<section style="background:var(--pink-muted); padding:64px 0; border-top:1px solid var(--line-lt); border-bottom:1px solid var(--line-lt);">
+  <div class="container" style="text-align:center;">
+    <!-- Small logo icon -->
+    <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="" style="width:72px; height:72px; object-fit:contain; margin:0 auto 20px; opacity:0.5;">
+    <h2 style="font-family:var(--font-serif); font-size:2rem; font-style:italic; color:var(--charcoal); margin-bottom:10px;">
+      The Perfect Gift
+    </h2>
+    <p style="font-family:var(--font-script); font-size:1.1rem; color:var(--pink-deep); margin-bottom:28px;">
+      Beautifully packaged for every occasion
+    </p>
+    <a href="{{ url_for('shop', category='gift-sets') }}" class="btn btn-primary btn-lg">Shop Gift Sets</a>
+  </div>
+</section>
+
+{% endblock %}

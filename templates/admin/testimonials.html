@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+{% block title %}Testimonials — Admin{% endblock %}
+{% block page_title %}Testimonials{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 380px; gap:24px; align-items:start;">
+
+  <!-- Existing Testimonials -->
+  <div class="admin-card">
+    <div class="admin-card__header">
+      <div class="admin-card__title">All Testimonials</div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Review</th>
+          <th>Stars</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in testimonials %}
+        <tr>
+          <td style="color:var(--cream); font-weight:500; white-space:nowrap;">{{ t.name }}</td>
+          <td style="color:var(--text); font-size:0.83rem; max-width:300px;">{{ t.text[:100] }}{% if t.text|length > 100 %}…{% endif %}</td>
+          <td style="color:var(--gold-light);">{{ '★' * t.rating }}</td>
+          <td>
+            {% if t.is_active %}
+            <span class="status status-paid">Visible</span>
+            {% else %}
+            <span class="status status-cancelled">Hidden</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <form action="{{ url_for('admin_testimonials') }}" method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="toggle">
+                <input type="hidden" name="id" value="{{ t.id }}">
+                <button type="submit" class="admin-btn admin-btn-secondary admin-btn-sm">
+                  {{ 'Hide' if t.is_active else 'Show' }}
+                </button>
+              </form>
+              <form action="{{ url_for('admin_testimonials') }}" method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="{{ t.id }}">
+                <button type="submit" class="admin-btn admin-btn-danger admin-btn-sm" data-confirm="Delete this testimonial?">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not testimonials %}
+        <tr><td colspan="5" style="text-align:center; color:var(--text-dim); padding:32px;">No testimonials yet.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Testimonial -->
+  <div class="admin-card" style="position:sticky; top:80px;">
+    <div class="admin-card__header"><div class="admin-card__title">Add Testimonial</div></div>
+    <div class="admin-card__body">
+      <form action="{{ url_for('admin_testimonials') }}" method="POST">
+        <input type="hidden" name="action" value="add">
+        <div class="admin-form-group">
+          <label>Customer Name</label>
+          <input type="text" name="name" class="admin-input" required placeholder="e.g. Sara M.">
+        </div>
+        <div class="admin-form-group">
+          <label>Review Text</label>
+          <textarea name="text" class="admin-textarea" required placeholder="What did the customer say?"></textarea>
+        </div>
+        <div class="admin-form-group">
+          <label>Star Rating</label>
+          <select name="rating" class="admin-select">
+            <option value="5">★★★★★ (5 stars)</option>
+            <option value="4">★★★★☆ (4 stars)</option>
+            <option value="3">★★★☆☆ (3 stars)</option>
+          </select>
+        </div>
+        <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; justify-content:center;">Add Testimonial</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

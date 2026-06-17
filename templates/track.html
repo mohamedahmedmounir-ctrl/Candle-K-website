@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Track Order — Candle K{% endblock %}
+{% block content %}
+<style>
+.track-wrap{max-width:700px;margin:60px auto;padding:0 24px;}
+.track-header{text-align:center;margin-bottom:40px;}
+.track-header h1{font-family:'Cormorant Garamond',serif;font-size:2.4rem;color:var(--charcoal);}
+.track-header p{color:var(--charcoal-lt);font-size:.95rem;}
+.track-search{display:flex;gap:12px;max-width:500px;margin:28px auto 0;}
+.track-search input{flex:1;padding:13px 16px;border:1px solid var(--sand);border-radius:4px;font-size:.95rem;color:var(--charcoal);background:var(--ivory);}
+.track-search input:focus{outline:none;border-color:var(--pink-deep);}
+.btn-track{padding:13px 22px;background:var(--charcoal);color:var(--ivory);border:none;border-radius:4px;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
+.btn-track:hover{background:var(--pink-deep);}
+/* Order card */
+.order-card{background:#fff;border:1px solid var(--sand);border-radius:8px;padding:32px;margin-top:32px;}
+.oc-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--sand);}
+.oc-num{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--charcoal);}
+.oc-date{font-size:.8rem;color:var(--charcoal-lt);margin-top:4px;}
+.status-badge{display:inline-block;padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+.s-pending{background:#FFF3CD;color:#856404;}
+.s-pending_verification{background:#FFF3CD;color:#856404;}
+.s-paid{background:#D4EDDA;color:#155724;}
+.s-processing{background:#CCE5FF;color:#004085;}
+.s-shipped{background:#E2D9F3;color:#6f42c1;}
+.s-out_for_delivery{background:#FFF3CD;color:#856404;}
+.s-delivered{background:#D4EDDA;color:#155724;}
+.s-cancelled{background:#F8D7DA;color:#721c24;}
+/* Timeline */
+.timeline{position:relative;padding-left:32px;margin-bottom:28px;}
+.timeline::before{content:'';position:absolute;left:11px;top:6px;bottom:0;width:2px;background:var(--sand);}
+.tl-event{position:relative;margin-bottom:22px;}
+.tl-dot{position:absolute;left:-32px;width:22px;height:22px;border-radius:50%;background:var(--sand);border:3px solid #fff;box-shadow:0 0 0 2px var(--sand);display:flex;align-items:center;justify-content:center;font-size:.65rem;}
+.tl-dot.active{background:var(--pink-deep);box-shadow:0 0 0 2px var(--pink-deep);}
+.tl-title{font-size:.9rem;font-weight:600;color:var(--charcoal);}
+.tl-msg{font-size:.82rem;color:var(--charcoal-lt);margin-top:2px;line-height:1.5;}
+.tl-time{font-size:.73rem;color:#C8BFB0;margin-top:4px;}
+/* Items */
+.items-table{width:100%;border-collapse:collapse;font-size:.87rem;}
+.items-table th{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);padding:6px 0;text-align:left;border-bottom:1px solid var(--sand);}
+.items-table td{padding:10px 0;border-bottom:1px solid var(--sand);color:var(--charcoal);}
+.items-table tr:last-child td{border-bottom:none;}
+.totals-rows td{padding:5px 0;font-size:.84rem;color:var(--charcoal-lt);}
+.grand-total td{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--charcoal);padding-top:10px;border-top:1px solid var(--sand);}
+.not-found{text-align:center;padding:40px;background:#fff;border:1px solid var(--sand);border-radius:8px;margin-top:28px;}
+.not-found .nf-icon{font-size:3rem;margin-bottom:12px;}
+.not-found p{color:var(--charcoal-lt);}
+</style>
+
+<div class="track-wrap">
+  <div class="track-header">
+    <h1>Track Your Order</h1>
+    <p>Enter your order number to see real-time updates.</p>
+    <form method="GET" action="/track" class="track-search">
+      <input type="text" name="order_number" value="{{ searched or '' }}" placeholder="e.g. CK-20250313-A1B2C3" required>
+      <button type="submit" class="btn-track">Track →</button>
+    </form>
+  </div>
+
+  {% if searched %}
+    {% if order %}
+    <div class="order-card">
+      <div class="oc-header">
+        <div>
+          <div class="oc-num">{{ order.order_number }}</div>
+          <div class="oc-date">Placed on {{ order.created_at[:16] }}</div>
+        </div>
+        <span class="status-badge s-{{ order.status }}">{{ order.status|replace('_',' ')|title }}</span>
+      </div>
+
+      {% if order.tracking_number %}
+      <div style="padding:14px;background:var(--ivory);border-radius:6px;text-align:center;margin-bottom:24px;">
+        <div style="font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:4px;">Tracking Number</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--charcoal);">{{ order.tracking_number }}</div>
+      </div>
+      {% endif %}
+
+      {% if tracking %}
+      <h3 style="font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:18px;">Order Timeline</h3>
+      <div class="timeline">
+        {% for event in tracking|reverse %}
+        <div class="tl-event">
+          <div class="tl-dot {% if loop.first %}active{% endif %}">{{ '✓' if loop.first else '' }}</div>
+          <div class="tl-title">{{ event.title }}</div>
+          {% if event.message %}<div class="tl-msg">{{ event.message }}</div>{% endif %}
+          <div class="tl-time">{{ event.created_at[:16] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <h3 style="font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:12px;">Your Items</h3>
+      <table class="items-table">
+        <tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th></tr>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.product_name }}</td>
+          <td style="text-align:center">× {{ item.quantity }}</td>
+          <td style="text-align:right;font-family:'Cormorant Garamond',serif;">{{ (item.product_price * item.quantity)|currency }} EGP</td>
+        </tr>
+        {% endfor %}
+        <tr class="totals-rows"><td colspan="2" style="text-align:right;padding-top:10px;">Shipping</td><td style="text-align:right;padding-top:10px;">{{ '🎁 Free' if order.shipping == 0 else (order.shipping|currency ~ ' EGP') }}</td></tr>
+        {% if order.discount_amount and order.discount_amount > 0 %}
+        <tr class="totals-rows"><td colspan="2" style="text-align:right;color:var(--leaf);">Discount{% if order.promo_code %} ({{ order.promo_code }}){% endif %}</td><td style="text-align:right;color:var(--leaf);">−{{ order.discount_amount|currency }} EGP</td></tr>
+        {% endif %}
+        <tr class="grand-total"><td colspan="2" style="text-align:right;">Total</td><td style="text-align:right;">{{ order.total|currency }} EGP</td></tr>
+      </table>
+
+      <div style="margin-top:20px;padding:14px;background:var(--ivory);border-radius:6px;">
+        <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--charcoal-lt);margin-bottom:6px;">Delivery Address</div>
+        <div style="color:var(--charcoal);font-size:.9rem;">{{ order.address }}, {{ order.city }}</div>
+        <div style="color:var(--charcoal-lt);font-size:.83rem;margin-top:3px;">📞 {{ order.customer_phone }}</div>
+      </div>
+    </div>
+    {% else %}
+    <div class="not-found">
+      <div class="nf-icon">🔍</div>
+      <p><strong>Order not found.</strong><br>Please check the order number and try again.</p>
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

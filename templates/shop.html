@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Shop — Candle K{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{{ url_for('index') }}">Home</a>
+      <span>/</span>
+      <span>Shop</span>
+      {% if current_cat %}<span>/</span><span>{{ current_cat.name }}</span>{% endif %}
+    </div>
+    <h1 class="page-header__title">
+      {% if current_cat %}{{ current_cat.name }}{% elif search %}Results for "{{ search }}"{% else %}All Candles{% endif %}
+    </h1>
+    {% if current_cat and current_cat.description %}
+    <p style="color:var(--text-light); font-size:0.9rem; margin-top:8px;">{{ current_cat.description }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<section style="padding-bottom:100px;">
+  <div class="container">
+
+    <div class="shop-filters">
+      <div class="filter-tabs">
+        <button class="filter-tab {% if not request.args.get('category') %}active{% endif %}" data-cat="">All</button>
+        {% for cat in categories %}
+        <button class="filter-tab {% if request.args.get('category') == cat.slug %}active{% endif %}" data-cat="{{ cat.slug }}">{{ cat.name }}</button>
+        {% endfor %}
+      </div>
+
+      <div class="shop-sort">
+        <select id="sort-select">
+          <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+          <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+        </select>
+      </div>
+    </div>
+
+    {% if products %}
+    <p style="font-size:0.8rem; color:var(--text-light); margin-bottom:32px; letter-spacing:0.05em;">
+      {{ products | length }} product{{ 's' if products | length != 1 else '' }}
+    </p>
+    <div class="products-grid">
+      {% for product in products %}
+      <div class="product-card stat-animate">
+        <a href="{{ url_for('product_detail', slug=product.slug) }}">
+          <div class="product-card__image">
+            {% if product.image %}
+            <img src="{{ url_for('uploaded_product', filename=product.image) }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+            <div class="product-card__placeholder">
+              <svg width="60" height="80" viewBox="0 0 120 160" fill="none"><rect x="40" y="60" width="40" height="90" rx="2" fill="#B8935A" opacity="0.4"/><path d="M60 60 C55 45 45 40 50 28 C52 35 58 32 60 20 C62 32 68 35 70 28 C75 40 65 45 60 60Z" fill="#B8935A" opacity="0.5"/></svg>
+            </div>
+            {% endif %}
+            {% if product.original_price and product.original_price > product.price %}
+            <div class="product-card__badge product-card__badge--sale">Sale</div>
+            {% elif product.is_bestseller %}
+            <div class="product-card__badge">Bestseller</div>
+            {% endif %}
+          </div>
+        </a>
+        <div class="product-card__body">
+          {% if product.category_name %}<div class="product-card__category">{{ product.category_name }}</div>{% endif %}
+          <div class="product-card__name">
+            <a href="{{ url_for('product_detail', slug=product.slug) }}">{{ product.name }}</a>
+          </div>
+          <p class="product-card__desc">{{ product.short_description }}</p>
+          <div class="product-card__price">
+            <span class="product-card__price-current">{{ product.price | int }} EGP</span>
+            {% if product.original_price and product.original_price > product.price %}
+            <span class="product-card__price-original">{{ product.original_price | int }} EGP</span>
+            {% endif %}
+          </div>
+          <div class="product-card__actions">
+            {% if product.stock > 0 %}
+            <form class="add-to-cart-form" data-name="{{ product.name }}" action="/cart/add" method="POST" style="flex:1">
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <input type="hidden" name="qty" value="1">
+              <button type="submit" class="btn btn-primary btn-sm" style="width:100%">Add to Cart</button>
+            </form>
+            {% else %}
+            <button type="button" class="btn btn-outline btn-sm"
+                    style="flex:1;cursor:pointer;border-color:var(--pink-deep);color:var(--pink-deep);"
+                    onclick="openWishlistModal('{{ product.id }}','{{ product.name }}')">
+              🔔 Notify Me
+            </button>
+            {% endif %}
+            <a href="{{ url_for('product_detail', slug=product.slug) }}" class="btn btn-outline btn-sm">View</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:80px 0; color:var(--text-light);">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin:0 auto 20px; opacity:0.3;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p style="font-family:var(--font-serif); font-size:1.8rem; font-style:italic; margin-bottom:12px;">No candles found</p>
+      <p style="font-size:0.9rem;">Try adjusting your search or <a href="{{ url_for('shop') }}" style="color:var(--gold);">view all candles</a>.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ── Wishlist Modal ─────────────────────────────── -->
+<div id="wishlist-modal" style="display:none;position:fixed;inset:0;background:rgba(44,42,39,.55);z-index:2000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:12px;padding:32px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(44,42,39,.25);position:relative;">
+    <button onclick="closeWishlistModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#7A736A;line-height:1;">×</button>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:2.4rem;margin-bottom:10px;">🔔</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:#2C2A27;margin-bottom:6px;">Notify me when available</div>
+      <div id="wl-product-name" style="font-size:.9rem;color:#7A736A;"></div>
+    </div>
+    <p style="font-size:.85rem;color:#7A736A;text-align:center;margin-bottom:20px;line-height:1.7;">
+      We'll send you an email the moment this candle is back in stock — no spam, just one notification.
+    </p>
+    <input type="hidden" id="wl-product-id">
+    <input type="email" id="wl-email" placeholder="your@email.com"
+           style="width:100%;padding:13px 14px;border:1px solid #DDD8CE;border-radius:6px;font-size:.95rem;color:#2C2A27;background:#F7F5EC;font-family:inherit;box-sizing:border-box;margin-bottom:12px;"
+           onkeydown="if(event.key==='Enter'){submitWishlist();}">
+    <button onclick="submitWishlist()" id="wl-submit-btn"
+            style="width:100%;padding:14px;background:#2C2A27;color:#F7F5EC;border:none;border-radius:6px;font-size:.82rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .2s;"
+            onmouseover="this.style.background='#C97878'" onmouseout="this.style.background='#2C2A27'">
+      Notify Me When Back in Stock
+    </button>
+    <div id="wl-result" style="margin-top:12px;font-size:.83rem;text-align:center;display:none;"></div>
+  </div>
+</div>
+
+<script>
+function openWishlistModal(pid, name) {
+  document.getElementById('wl-product-id').value = pid;
+  document.getElementById('wl-product-name').textContent = name;
+  document.getElementById('wl-email').value = '';
+  document.getElementById('wl-result').style.display = 'none';
+  document.getElementById('wl-submit-btn').disabled = false;
+  document.getElementById('wl-submit-btn').textContent = 'Notify Me When Back in Stock';
+  document.getElementById('wishlist-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('wl-email').focus(), 100);
+}
+function closeWishlistModal() {
+  document.getElementById('wishlist-modal').style.display = 'none';
+}
+document.getElementById('wishlist-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeWishlistModal();
+});
+async function submitWishlist() {
+  const email = document.getElementById('wl-email').value.trim();
+  const pid   = document.getElementById('wl-product-id').value;
+  const btn   = document.getElementById('wl-submit-btn');
+  const res   = document.getElementById('wl-result');
+  if (!email || !email.includes('@')) {
+    res.style.display = 'block'; res.style.color = '#c0392b';
+    res.textContent = 'Please enter a valid email address.'; return;
+  }
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const fd = new FormData();
+    fd.append('product_id', pid); fd.append('email', email);
+    const r    = await fetch('/wishlist/add', { method: 'POST', body: fd });
+    const data = await r.json();
+    res.style.display = 'block';
+    if (data.success) {
+      res.style.color = '#8FA882';
+      res.innerHTML   = '✓ ' + data.message;
+      btn.textContent = '✓ You\'re on the list!';
+      btn.style.background = '#8FA882';
+      setTimeout(closeWishlistModal, 2500);
+    } else {
+      res.style.color = '#c0392b';
+      res.textContent = data.error || 'Something went wrong.';
+      btn.disabled    = false; btn.textContent = 'Notify Me When Back in Stock';
+    }
+  } catch(e) {
+    res.style.display = 'block'; res.style.color = '#c0392b';
+    res.textContent   = 'Network error. Please try again.';
+    btn.disabled = false; btn.textContent = 'Notify Me When Back in Stock';
+  }
+}
+</script>
+{% endblock %}
