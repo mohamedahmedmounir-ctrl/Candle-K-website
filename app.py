@@ -316,14 +316,24 @@ def init_db():
             c.execute(f'ALTER TABLE custom_orders ADD COLUMN {col} {defn}')
 
     # ── Upgrade legacy sha256 admin password to PBKDF2 ───────────────────────
+    # The first admin password comes from ADMIN_PASSWORD. If it isn't set, a random one is
+    # generated and printed once in the server log. There is no shared default password.
     old_hash = hashlib.sha256(b'admin123').hexdigest()
     admin = c.execute('SELECT * FROM admins WHERE username=?',('admin',)).fetchone()
+    env_pw = os.environ.get('ADMIN_PASSWORD')
     if admin is None:
+        initial_pw = env_pw or secrets.token_urlsafe(12)
         c.execute('INSERT OR IGNORE INTO admins (username,password_hash) VALUES (?,?)',
-                  ('admin', hash_password('admin123')))
-    elif admin[2] == old_hash:  # still old sha256 hash — upgrade it
-        c.execute('UPDATE admins SET password_hash=? WHERE username=?',
-                  (hash_password('admin123'), 'admin'))
+                  ('admin', hash_password(initial_pw)))
+        if not env_pw:
+            print(f"[Candle K] Admin password set to: {initial_pw}  (log in and change it, or set ADMIN_PASSWORD)", flush=True)
+    elif admin[2] == old_hash or check_password('admin123', admin[2]):
+        # An existing store still uses the old default password
+        if env_pw:
+            c.execute('UPDATE admins SET password_hash=? WHERE username=?', (hash_password(env_pw), 'admin'))
+        else:
+            print("[Candle K] WARNING: the admin account still uses the old default password. "
+                  "Change it in Admin -> Change Password or set ADMIN_PASSWORD.", flush=True)
 
     for nm,sl,ds in [
         ('Scented Candles','scented-candles','Luxurious fragrances'),
