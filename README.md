@@ -13,11 +13,7 @@ python app.py
 Visit: http://localhost:5000
 Admin:  http://localhost:5000/admin/login
 
-**Default admin credentials:**
-- Username: `admin`
-- Password: `admin123`
-
-> ⚠️ Change your password immediately after first login via Admin → Change Password.
+**Admin login:** the username is `admin`. Set the `ADMIN_PASSWORD` environment variable before the first run to choose the password. If it isn't set, a random password is generated and printed once in the server log. There is no shared default password. You can change it any time in Admin → Change Password.
 
 ---
 
